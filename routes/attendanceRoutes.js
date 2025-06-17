@@ -7,9 +7,37 @@ const { isAuthenticated, isOperator } = require('../middlewares/auth');
 
 const upload = multer();
 
-// GET /attendance - show upload form
-router.get('/', isAuthenticated, isOperator, (req, res) => {
-  res.render('operatorAttendance', { user: req.session.user, logs: null });
+// GET /attendance - show upload form and department management
+router.get('/', isAuthenticated, isOperator, async (req, res) => {
+  try {
+    const [supervisors] = await pool.query(
+      `SELECT u.id, u.username
+         FROM users u
+         JOIN roles r ON u.role_id = r.id
+        WHERE r.name='supervisor' AND u.is_active=TRUE
+        ORDER BY u.username`
+    );
+    const [departments] = await pool.query(
+      `SELECT d.id, d.name, d.supervisor_id, u.username AS supervisor
+         FROM departments d
+         LEFT JOIN users u ON d.supervisor_id = u.id
+        ORDER BY d.name`
+    );
+    res.render('operatorAttendance', {
+      user: req.session.user,
+      logs: null,
+      supervisors,
+      departments
+    });
+  } catch (err) {
+    console.error('Error loading attendance page:', err);
+    res.render('operatorAttendance', {
+      user: req.session.user,
+      logs: null,
+      supervisors: [],
+      departments: []
+    });
+  }
 });
 
 // POST /attendance/upload - process JSON attendance
@@ -57,6 +85,66 @@ router.post('/upload', isAuthenticated, isOperator, upload.single('attendanceFil
     req.flash('error', 'Could not process attendance');
   } finally {
     if (conn) conn.release();
+  }
+  res.redirect('/attendance');
+});
+
+// POST /attendance/department/create - create a new department
+router.post('/department/create', isAuthenticated, isOperator, async (req, res) => {
+  const { name, supervisor_id } = req.body;
+  if (!name) {
+    req.flash('error', 'Department name required');
+    return res.redirect('/attendance');
+  }
+  try {
+    let supId = supervisor_id || null;
+    if (supId) {
+      const [rows] = await pool.query(
+        `SELECT u.id FROM users u JOIN roles r ON u.role_id=r.id WHERE u.id=? AND r.name='supervisor'`,
+        [supId]
+      );
+      if (!rows.length) {
+        req.flash('error', 'Invalid supervisor selected');
+        return res.redirect('/attendance');
+      }
+      const [exists] = await pool.query('SELECT id FROM departments WHERE supervisor_id=?', [supId]);
+      if (exists.length) {
+        req.flash('error', 'Supervisor already assigned to another department');
+        return res.redirect('/attendance');
+      }
+    }
+    await pool.query('INSERT INTO departments (name, supervisor_id) VALUES (?, ?)', [name, supId]);
+    req.flash('success', 'Department created');
+  } catch (err) {
+    console.error('Error creating department:', err);
+    req.flash('error', 'Could not create department');
+  }
+  res.redirect('/attendance');
+});
+
+// POST /attendance/department/:id/update-supervisor - change supervisor
+router.post('/department/:id/update-supervisor', isAuthenticated, isOperator, async (req, res) => {
+  const deptId = req.params.id;
+  const { supervisor_id } = req.body;
+  try {
+    const [rows] = await pool.query(
+      `SELECT u.id FROM users u JOIN roles r ON u.role_id=r.id WHERE u.id=? AND r.name='supervisor'`,
+      [supervisor_id]
+    );
+    if (!rows.length) {
+      req.flash('error', 'Invalid supervisor selected');
+      return res.redirect('/attendance');
+    }
+    const [exists] = await pool.query('SELECT id FROM departments WHERE supervisor_id=? AND id<>?', [supervisor_id, deptId]);
+    if (exists.length) {
+      req.flash('error', 'Supervisor already assigned to another department');
+      return res.redirect('/attendance');
+    }
+    await pool.query('UPDATE departments SET supervisor_id=? WHERE id=?', [supervisor_id, deptId]);
+    req.flash('success', 'Supervisor updated');
+  } catch (err) {
+    console.error('Error updating supervisor:', err);
+    req.flash('error', 'Could not update supervisor');
   }
   res.redirect('/attendance');
 });
