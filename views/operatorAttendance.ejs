@@ -27,6 +27,23 @@
           <div class="mb-3">
             <input type="file" name="attendanceFile" accept=".json" class="form-control" required>
           </div>
+          <div class="mb-3">
+            <select name="department_id" class="form-select" required>
+              <option value="">Select Department</option>
+              <% departments.forEach(function(d){ %>
+                <option value="<%= d.id %>"><%= d.name %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="mb-3">
+            <select name="supervisor_id" class="form-select" required>
+              <option value="">Select Supervisor</option>
+              <% supervisors.forEach(function(s){ %>
+                <option value="<%= s.id %>"><%= s.username %></option>
+              <% }) %>
+            </select>
+          </div>
+          <p class="text-muted">Filename must be configuration_department_supervisor.json</p>
           <button type="submit" class="btn btn-primary">Upload</button>
         </form>
       </div>

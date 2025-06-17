@@ -42,8 +42,36 @@ router.get('/', isAuthenticated, isOperator, async (req, res) => {
 
 // POST /attendance/upload - process JSON attendance
 router.post('/upload', isAuthenticated, isOperator, upload.single('attendanceFile'), async (req, res) => {
+  const { department_id, supervisor_id } = req.body;
   if (!req.file) {
     req.flash('error', 'No attendance file uploaded');
+    return res.redirect('/attendance');
+  }
+  if (!department_id || !supervisor_id) {
+    req.flash('error', 'Department and supervisor required');
+    return res.redirect('/attendance');
+  }
+  let info;
+  try {
+    const [rows] = await pool.query(
+      `SELECT d.name AS dept_name, u.username AS sup_name
+         FROM departments d JOIN users u ON d.supervisor_id = u.id
+        WHERE d.id=? AND u.id=?`,
+      [department_id, supervisor_id]
+    );
+    if (!rows.length) {
+      req.flash('error', 'Invalid department or supervisor');
+      return res.redirect('/attendance');
+    }
+    info = rows[0];
+  } catch (err) {
+    console.error('Error validating department/supervisor:', err);
+    req.flash('error', 'Error validating department/supervisor');
+    return res.redirect('/attendance');
+  }
+  const expectedFile = `configuration_${info.dept_name}_${info.sup_name}.json`;
+  if (req.file.originalname !== expectedFile) {
+    req.flash('error', `File name must be ${expectedFile}`);
     return res.redirect('/attendance');
   }
 

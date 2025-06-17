@@ -57,6 +57,9 @@ function isStitchingMaster(req, res, next) {
 function isFinishingMaster(req, res, next) {
     return hasRole('finishing')(req, res, next);
 }
+function isSupervisor(req, res, next) {
+    return hasRole('supervisor')(req, res, next);
+}
 function isCatalogUpload(req, res, next) {
     return hasRole('catalogUpload')(req, res, next);
 }
@@ -119,6 +122,7 @@ module.exports = {
     isFabricManager,
     isCuttingManager,
     isStitchingMaster,
+    isSupervisor,
     isFinishingMaster,
     isWashingMaster,
     isJeansAssemblyMaster,
