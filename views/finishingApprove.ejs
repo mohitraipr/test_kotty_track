@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Finishing Approvals</title>
+  <!-- Ensure proper scaling on mobile devices -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      padding-top: 70px;
+      padding-bottom: 3rem;
+    }
+    /* When any form is submitted, disable all buttons on the page */
+    button:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+    /* Optional: Hide deny form on very small screens */
+    @media (max-width: 576px) {
+      .deny-form {
+        display: none;
+      }
+    }
+  </style>
+  <script>
+    // Disable all buttons on form submission to prevent duplicate submissions
+    function disableAllButtons(form) {
+      const buttons = document.querySelectorAll('button');
+      buttons.forEach(btn => btn.disabled = true);
+      form.submit();
+    }
+  </script>
+</head>
+<body class="bg-light">
+  <nav class="navbar navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/finishingdashboard">Back to Dashboard</a>
+      <div class="text-white">
+        Welcome, <%= user.username %>
+        <a href="/logout" class="btn btn-sm btn-danger ms-3">Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container my-4">
+    <% if (error && error.length) { %>
+      <div class="alert alert-danger"><%= error.join(' | ') %></div>
+    <% } %>
+    <% if (success && success.length) { %>
+      <div class="alert alert-success"><%= success.join(' | ') %></div>
+    <% } %>
+
+    <h1 class="mb-4">Pending Finishing Assignments</h1>
+    
+    <!-- Live Search Input -->
+    <div class="mb-3">
+      <input type="text" id="liveSearch" class="form-control" placeholder="Search assignments..." />
+    </div>
+    
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Department</th>
+            <th>Lot No</th>
+            <th>Total Pieces</th>
+            <th>Sizes</th>
+            <th>Cutting Remark</th>
+            <th>Cutting SKU</th>
+            <th>Assigned On</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (!pending || !pending.length) { %>
+            <tr>
+              <td colspan="9" class="text-center text-muted">No pending assignments</td>
+            </tr>
+          <% } else { %>
+            <% pending.forEach(p => { %>
+              <tr>
+                <td><%= p.id %></td>
+                <td><%= p.department %></td>
+                <td><%= p.lot_no %></td>
+                <td><%= p.total_pieces %></td>
+                <td>
+                  <% if (p.sizes && p.sizes.length) { %>
+                    <%= p.sizes.map(s => s.size_label + ':' + s.pieces).join(', ') %>
+                  <% } else { %>
+                    N/A
+                  <% } %>
+                </td>
+                <td><%= p.cutting_remark || 'N/A' %></td>
+                <td><%= p.cutting_sku || 'N/A' %></td>
+                <td><%= p.assigned_on %></td>
+                <td>
+                  <!-- Approve Form -->
+                  <form action="/finishingdashboard/approve/<%= p.id %>" method="POST" class="mb-2" onsubmit="disableAllButtons(this); return false;">
+                    <div class="input-group input-group-sm mb-1">
+                      <span class="input-group-text">Remark</span>
+                      <input type="text" name="assignment_remark" class="form-control" placeholder="Optional remark" />
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-success w-100">Approve</button>
+                  </form>
+
+                  <!-- Deny Form (disabled) -->
+                  <div class="deny-form">
+                    <form action="/finishingdashboard/deny/<%= p.id %>" method="POST" onsubmit="disableAllButtons(this); return false;">
+                      <div class="input-group input-group-sm mb-1">
+                        <span class="input-group-text">Remark</span>
+                        <input type="text" name="assignment_remark" class="form-control" placeholder="Reason for denial" />
+                      </div>
+                      <button type="submit" class="btn btn-sm btn-danger w-100" disabled>Deny</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Live Search Script -->
+  <script>
+    document.getElementById('liveSearch').addEventListener('input', function() {
+      var searchValue = this.value.toLowerCase();
+      var rows = document.querySelectorAll('table tbody tr');
+      rows.forEach(function(row) {
+        // Check if row text contains search value
+        var rowText = row.textContent.toLowerCase();
+        if (rowText.indexOf(searchValue) > -1) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

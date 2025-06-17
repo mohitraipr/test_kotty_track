@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Stitching TAT Detail - <%= masterUser.username %></title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 { margin: 0; }
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .actions a {
+      padding: 6px 12px;
+      background: #007bff;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: background 0.3s;
+    }
+    .actions a:hover {
+      background: #0056b3;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+      font-size: 14px;
+    }
+    th {
+      background: #f8f8f8;
+    }
+    /* Color-coded rows */
+    .red-row {
+      background-color: #ffe8e8; /* light red background */
+    }
+    .green-row {
+      background-color: #e8ffe8; /* light green background */
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Stitching TAT Detail: <%= masterUser.username %></h1>
+    <p>As of <%= currentDate %></p>
+  </div>
+
+  <div class="actions">
+    <a href="/stitching-tat">&larr; Back to Summary</a>
+    <!-- Download the Excel for this Master -->
+    <a href="/operator/stitching-tat/<%= masterUser.id %>?download=1">Download Excel</a>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Lot No</th>
+        <th>SKU</th>
+        <th>Status</th>
+        <th>Total Pieces</th>
+        <th>Cutting Remark</th>
+        <th>Assigned On</th>
+        <th>Next Dept On</th>
+        <th>TAT (Days)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% detailRows.forEach((row) => {
+         // If TAT > 3 => "red-row", else "green-row"
+         const rowClass = (row.tatDays > 3) ? "red-row" : "green-row";
+
+         // Extra label in the TAT cell => e.g. "4 (TAT Crossed)" or "2 (Within TAT)"
+         const tatLabel = (row.tatDays > 3) ? " (TAT Crossed)" : " (Within TAT)";
+      %>
+        <tr class="<%= rowClass %>">
+          <td><%= row.lotNo %></td>
+          <td><%= row.sku %></td>
+          <td><%= row.status %></td>
+          <td><%= row.totalPieces %></td>
+          <td><%= row.cuttingRemark %></td>
+          <td><%= row.assignedOnStr %></td>
+          <td><%= row.nextDeptAssignedOnStr %></td>
+          <td><%= row.tatDays %><%= tatLabel %></td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+</body>
+</html>
