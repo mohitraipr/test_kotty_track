@@ -79,6 +79,9 @@ function isJeansAssemblyMaster(req, res, next) {
 function isOperator(req, res, next) {
     return hasRole('operator')(req, res, next);
 }
+function isSupervisor(req, res, next) {
+    return hasRole('supervisor')(req, res, next);
+}
 function isPaymentAuthoriser(req, res, next) {
     return hasRole('operator')(req, res, next);
 }
@@ -123,6 +126,7 @@ module.exports = {
     isWashingMaster,
     isJeansAssemblyMaster,
     isOperator,
+    isSupervisor,
     isDepartmentUser,
     isAccountsAdmin,
     isPaymentAuthoriser,

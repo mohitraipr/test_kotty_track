@@ -47,6 +47,31 @@ router.post('/upload', isAuthenticated, isOperator, upload.single('attendanceFil
     return res.redirect('/attendance');
   }
 
+  const fname = req.file.originalname;
+  const match = fname.match(/^([A-Za-z0-9]+)[_+\-]([A-Za-z0-9]+)\.json$/i);
+  if (!match) {
+    req.flash('error', 'Filename must be departmentName+supervisorName.json');
+    return res.redirect('/attendance');
+  }
+  const deptName = match[1];
+  const supervisorName = match[2];
+  try {
+    const [rows] = await pool.query(
+      `SELECT d.id FROM departments d
+        JOIN users u ON d.supervisor_id = u.id
+       WHERE d.name = ? AND u.username = ?`,
+      [deptName, supervisorName]
+    );
+    if (!rows.length) {
+      req.flash('error', 'Department and supervisor mismatch');
+      return res.redirect('/attendance');
+    }
+  } catch (err) {
+    console.error('Error validating filename:', err);
+    req.flash('error', 'Invalid file name');
+    return res.redirect('/attendance');
+  }
+
   let records;
   try {
     records = JSON.parse(req.file.buffer.toString());

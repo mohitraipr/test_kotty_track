@@ -164,12 +164,13 @@ CREATE TABLE operator_attendance (
   work_date DATE NOT NULL,
   punch_in TIME NOT NULL,
   punch_out TIME NOT NULL,
-  hours_worked DECIMAL(5,2) NOT NULL,
+hours_worked DECIMAL(5,2) NOT NULL,
   UNIQUE KEY uniq_punch_date (punching_id, work_date)
 );
 ```
 
 `hours_worked` stores the time difference between `punch_in` and `punch_out` in hours. Uploading the same punching ID and date again updates the record.
+Attendance files must be named using the pattern `departmentName+supervisorName.json` (e.g. `cutting+john.json`). The server validates that the supervisor is assigned to that department.
 
 ## Department Management
 
@@ -185,3 +186,10 @@ CREATE TABLE departments (
 ```
 
 `supervisor_id` references a user with the role `supervisor`. Each supervisor can only manage one department. Operators can create new departments and change their assigned supervisor from the dashboard.
+
+## Supervisor Dashboard
+
+Supervisors can log in and manage only the employees they created. From `/supervisor/employees` they can:
+
+* View a list of their employees
+* Create new employees by specifying punching ID, name, salary type (`per_day` or `monthly`), salary amount and working hours
