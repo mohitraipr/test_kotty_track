@@ -170,3 +170,18 @@ CREATE TABLE operator_attendance (
 ```
 
 `hours_worked` stores the time difference between `punch_in` and `punch_out` in hours. Uploading the same punching ID and date again updates the record.
+
+## Department Management
+
+Create a table to store production departments and assign each a supervisor:
+
+```sql
+CREATE TABLE departments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL UNIQUE,
+  supervisor_id INT UNIQUE,
+  FOREIGN KEY (supervisor_id) REFERENCES users(id)
+);
+```
+
+`supervisor_id` references a user with the role `supervisor`. Each supervisor can only manage one department. Operators can create new departments and change their assigned supervisor from the dashboard.
