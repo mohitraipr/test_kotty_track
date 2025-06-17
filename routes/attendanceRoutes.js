@@ -37,15 +37,25 @@ router.post('/upload', isAuthenticated, isOperator, upload.single('attendanceFil
       if (!Array.isArray(emp.attendance)) continue;
       for (const att of emp.attendance) {
         const date = att.date;
-        const punchIn = att.punchIn;
-        const punchOut = att.punchOut;
-        const minutes = moment(punchOut, 'HH:mm').diff(moment(punchIn, 'HH:mm'), 'minutes');
-        const hoursWorked = (minutes / 60).toFixed(2);
+        let punchIn = att.punchIn || null;
+        let punchOut = att.punchOut || null;
+        let hoursWorked = 0;
+        let status = 'absent';
+
+        if (punchIn && punchOut) {
+          const minutes = moment(punchOut, 'HH:mm').diff(moment(punchIn, 'HH:mm'), 'minutes');
+          hoursWorked = Number(minutes / 60).toFixed(2);
+          status = 'present';
+        } else {
+          punchIn = null;
+          punchOut = null;
+        }
+
         await conn.query(
-          `INSERT INTO operator_attendance (punching_id, name, work_date, punch_in, punch_out, hours_worked)
-           VALUES (?, ?, ?, ?, ?, ?)
-           ON DUPLICATE KEY UPDATE punch_in=VALUES(punch_in), punch_out=VALUES(punch_out), hours_worked=VALUES(hours_worked)`,
-          [punchingId, name, date, punchIn, punchOut, hoursWorked]
+          `INSERT INTO operator_attendance (punching_id, name, work_date, punch_in, punch_out, hours_worked, status)
+           VALUES (?, ?, ?, ?, ?, ?, ?)
+           ON DUPLICATE KEY UPDATE punch_in=VALUES(punch_in), punch_out=VALUES(punch_out), hours_worked=VALUES(hours_worked), status=VALUES(status)`,
+          [punchingId, name, date, punchIn, punchOut, hoursWorked, status]
         );
       }
     }

@@ -162,11 +162,12 @@ CREATE TABLE operator_attendance (
   punching_id VARCHAR(20) NOT NULL,
   name VARCHAR(100) NOT NULL,
   work_date DATE NOT NULL,
-  punch_in TIME NOT NULL,
-  punch_out TIME NOT NULL,
-  hours_worked DECIMAL(5,2) NOT NULL,
+  punch_in TIME NULL,
+  punch_out TIME NULL,
+  hours_worked DECIMAL(5,2) NOT NULL DEFAULT 0,
+  status ENUM('present','absent') NOT NULL DEFAULT 'present',
   UNIQUE KEY uniq_punch_date (punching_id, work_date)
 );
 ```
 
-`hours_worked` stores the time difference between `punch_in` and `punch_out` in hours. Uploading the same punching ID and date again updates the record.
+`hours_worked` stores the time difference between `punch_in` and `punch_out` in hours. Days with no punches are stored with `status = 'absent'` and zero hours. Uploading the same punching ID and date again updates the record.
