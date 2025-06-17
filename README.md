@@ -151,3 +151,22 @@ CREATE TABLE dispatched_data (
 ```
 
 `incoming_data` stores every addition with timestamp and user while `dispatched_data` tracks quantity sent out along with remarks.
+
+## Operator Attendance Upload
+
+Operators can upload daily attendance JSON files. Create the following table to store calculated working hours:
+
+```sql
+CREATE TABLE operator_attendance (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  punching_id VARCHAR(20) NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  work_date DATE NOT NULL,
+  punch_in TIME NOT NULL,
+  punch_out TIME NOT NULL,
+  hours_worked DECIMAL(5,2) NOT NULL,
+  UNIQUE KEY uniq_punch_date (punching_id, work_date)
+);
+```
+
+`hours_worked` stores the time difference between `punch_in` and `punch_out` in hours. Uploading the same punching ID and date again updates the record.
