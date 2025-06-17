@@ -46,4 +46,36 @@ router.post('/employees/create', isAuthenticated, isSupervisor, async (req, res)
   res.redirect('/supervisor/employees');
 });
 
+// GET /supervisor/employees/:id/attendance - view attendance for an employee
+router.get('/employees/:id/attendance', isAuthenticated, isSupervisor, async (req, res) => {
+  const empId = req.params.id;
+  try {
+    const [empRows] = await pool.query(
+      'SELECT id, name FROM employees WHERE id = ? AND created_by = ?',
+      [empId, req.session.user.id]
+    );
+    if (!empRows.length) {
+      req.flash('error', 'Employee not found');
+      return res.redirect('/supervisor/employees');
+    }
+    const employee = empRows[0];
+    const [attendance] = await pool.query(
+      `SELECT work_date, punch_in, punch_out, hours_worked
+         FROM operator_attendance
+        WHERE employee_id = ?
+        ORDER BY work_date DESC`,
+      [empId]
+    );
+    res.render('supervisorEmployeeAttendance', {
+      user: req.session.user,
+      employee,
+      attendance
+    });
+  } catch (err) {
+    console.error('Error loading attendance:', err);
+    req.flash('error', 'Could not load attendance');
+    res.redirect('/supervisor/employees');
+  }
+});
+
 module.exports = router;
