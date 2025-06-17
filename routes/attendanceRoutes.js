@@ -65,10 +65,20 @@ router.post('/upload', isAuthenticated, isOperator, upload.single('attendanceFil
       if (!Array.isArray(emp.attendance)) continue;
       for (const att of emp.attendance) {
         const date = att.date;
-        const punchIn = att.punchIn;
-        const punchOut = att.punchOut;
-        const minutes = moment(punchOut, 'HH:mm').diff(moment(punchIn, 'HH:mm'), 'minutes');
-        const hoursWorked = (minutes / 60).toFixed(2);
+        const punchInRaw = att.punchIn;
+        const punchOutRaw = att.punchOut;
+
+        const punchIn = punchInRaw ? moment(punchInRaw, 'HH:mm').format('HH:mm:ss') : null;
+        const punchOut = punchOutRaw ? moment(punchOutRaw, 'HH:mm').format('HH:mm:ss') : null;
+
+        let hoursWorked = 0;
+        if (punchIn && punchOut) {
+          const minutes = moment(punchOut, 'HH:mm:ss').diff(moment(punchIn, 'HH:mm:ss'), 'minutes');
+          if (Number.isFinite(minutes)) {
+            hoursWorked = +(minutes / 60).toFixed(2);
+          }
+        }
+
         await conn.query(
           `INSERT INTO operator_attendance (punching_id, name, work_date, punch_in, punch_out, hours_worked)
            VALUES (?, ?, ?, ?, ?, ?)
