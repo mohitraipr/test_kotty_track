@@ -154,23 +154,25 @@ CREATE TABLE dispatched_data (
 
 ## Operator Attendance Upload
 
-Operators can upload daily attendance JSON files. Create the following table to store calculated working hours:
+Operators can upload daily attendance JSON files. Create the following table to store calculated working hours and link each record to an employee:
 
 ```sql
 CREATE TABLE operator_attendance (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  employee_id INT NOT NULL,
   punching_id VARCHAR(20) NOT NULL,
   name VARCHAR(100) NOT NULL,
   work_date DATE NOT NULL,
   punch_in TIME NOT NULL,
   punch_out TIME NOT NULL,
-hours_worked DECIMAL(5,2) NOT NULL,
-  UNIQUE KEY uniq_punch_date (punching_id, work_date)
+  hours_worked DECIMAL(5,2) NOT NULL,
+  UNIQUE KEY uniq_emp_date (employee_id, work_date),
+  FOREIGN KEY (employee_id) REFERENCES employees(id)
 );
 ```
 
 `hours_worked` stores the time difference between `punch_in` and `punch_out` in hours. Uploading the same punching ID and date again updates the record.
-Attendance files must be named using the pattern `departmentName+supervisorName.json` (e.g. `cutting+john.json`). The server validates that the supervisor is assigned to that department.
+Attendance files must be named using the pattern `departmentName+supervisorName+userId.json` (e.g. `cutting+john+5.json`). The server validates that the supervisor with that ID is assigned to the department.
 
 ## Department Management
 

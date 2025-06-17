@@ -48,19 +48,20 @@ router.post('/upload', isAuthenticated, isOperator, upload.single('attendanceFil
   }
 
   const fname = req.file.originalname;
-  const match = fname.match(/^([A-Za-z0-9]+)[_+\-]([A-Za-z0-9]+)\.json$/i);
+  const match = fname.match(/^([A-Za-z0-9]+)[_+\-]([A-Za-z0-9]+)[_+\-](\d+)\.json$/i);
   if (!match) {
-    req.flash('error', 'Filename must be departmentName+supervisorName.json');
+    req.flash('error', 'Filename must be departmentName+supervisorName+userId.json');
     return res.redirect('/attendance');
   }
   const deptName = match[1];
   const supervisorName = match[2];
+  const supervisorId = parseInt(match[3], 10);
   try {
     const [rows] = await pool.query(
       `SELECT d.id FROM departments d
         JOIN users u ON d.supervisor_id = u.id
-       WHERE d.name = ? AND u.username = ?`,
-      [deptName, supervisorName]
+       WHERE d.name = ? AND u.username = ? AND u.id = ?`,
+      [deptName, supervisorName, supervisorId]
     );
     if (!rows.length) {
       req.flash('error', 'Department and supervisor mismatch');
@@ -86,7 +87,6 @@ router.post('/upload', isAuthenticated, isOperator, upload.single('attendanceFil
     await conn.beginTransaction();
     for (const emp of records) {
       const punchingId = emp.punchingId;
-      const name = emp.name;
       if (!Array.isArray(emp.attendance)) continue;
       for (const att of emp.attendance) {
         const date = att.date;
@@ -104,11 +104,21 @@ router.post('/upload', isAuthenticated, isOperator, upload.single('attendanceFil
           }
         }
 
+        const [empRows] = await conn.query(
+          'SELECT id, name FROM employees WHERE punching_id = ? AND created_by = ? LIMIT 1',
+          [punchingId, supervisorId]
+        );
+        if (!empRows.length) {
+          continue;
+        }
+        const empId = empRows[0].id;
+        const empName = empRows[0].name;
+
         await conn.query(
-          `INSERT INTO operator_attendance (punching_id, name, work_date, punch_in, punch_out, hours_worked)
-           VALUES (?, ?, ?, ?, ?, ?)
-           ON DUPLICATE KEY UPDATE punch_in=VALUES(punch_in), punch_out=VALUES(punch_out), hours_worked=VALUES(hours_worked)`,
-          [punchingId, name, date, punchIn, punchOut, hoursWorked]
+          `INSERT INTO operator_attendance (employee_id, punching_id, name, work_date, punch_in, punch_out, hours_worked)
+           VALUES (?, ?, ?, ?, ?, ?, ?)
+           ON DUPLICATE KEY UPDATE punch_in=VALUES(punch_in), punch_out=VALUES(punch_out), hours_worked=VALUES(hours_worked), employee_id=VALUES(employee_id)`,
+          [empId, punchingId, empName, date, punchIn, punchOut, hoursWorked]
         );
       }
     }
