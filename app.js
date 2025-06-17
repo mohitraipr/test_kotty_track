@@ -61,6 +61,7 @@ const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const operatorRoutes = require('./routes/operatorRoutes');
+const supervisorRoutes = require('./routes/supervisorRoutes');
 const fabricManagerRoutes = require('./routes/fabricManagerRoutes'); // Import Fabric Manager Routes
 const cuttingManagerRoutes = require('./routes/cuttingManagerRoutes');
 const departmentRoutes = require('./routes/departmentRoutes');
@@ -98,6 +99,7 @@ app.use('/washingin', washingIN);
 app.use('/catalogupload', catalogR);
 app.use('/inventory', inventoryRoutes);
 app.use('/attendance', attendanceRoutes);
+app.use('/supervisor', supervisorRoutes);
 
 app.use('/', hrRoutes);
 // Home Route
