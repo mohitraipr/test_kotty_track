@@ -74,6 +74,7 @@ const jeansAssemblyRoutes = require('./routes/jeansAssemblyRoutes.js');
 const editCuttingLotRoutes = require("./routes/editcuttinglots.js");
 const washingIN = require('./routes/washingInRoutes');
 const catalogR = require('./routes/catalogupload');
+const storeAdminRoutes = require('./routes/storeAdminRoutes');
 const hrRoutes = require('./routes/hrRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
@@ -98,6 +99,7 @@ app.use('/', bulkUploadRoutes);
 app.use('/washingin', washingIN);
 app.use('/catalogupload', catalogR);
 app.use('/inventory', inventoryRoutes);
+app.use('/store-admin', storeAdminRoutes);
 app.use('/attendance', attendanceRoutes);
 app.use('/supervisor', supervisorRoutes);
 

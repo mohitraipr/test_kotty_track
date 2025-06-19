@@ -116,6 +116,10 @@ function isStoreEmployee(req, res, next) {
     return hasRole('store_employee')(req, res, next);
 }
 
+function isStoreAdmin(req, res, next) {
+    return hasRole('store_admin')(req, res, next);
+}
+
 module.exports = {
     isAuthenticated,
     isAdmin,
@@ -132,5 +136,6 @@ module.exports = {
     isPaymentAuthoriser,
     isWashingInMaster,
     isCatalogUpload,
-    isStoreEmployee
+    isStoreEmployee,
+    isStoreAdmin
 };
