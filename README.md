@@ -152,6 +152,8 @@ CREATE TABLE dispatched_data (
 
 `incoming_data` stores every addition with timestamp and user while `dispatched_data` tracks quantity sent out along with remarks.
 
+Create a `store_admin` role in the `roles` table to allow managing the list of goods. Users with this role can add new items (description, size and unit) from the Store Admin dashboard. Newly created items automatically appear in the store inventory pages.
+
 ## Operator Attendance Upload
 
 Operators can upload daily attendance JSON files. Create the following table to store calculated working hours and link each record to an employee:
