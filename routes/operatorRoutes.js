@@ -459,6 +459,113 @@ router.get("/dashboard/api/leftovers", isAuthenticated, isOperator, async (req, 
   }
 });
 
+async function fetchPendencyRows(dept, searchLike, offset, limit) {
+  let query = "";
+  const params = [searchLike, offset, limit];
+  if (dept === "assembly") {
+    query = `
+      SELECT ja.id AS assignment_id, sd.lot_no, u.username,
+             ja.assigned_pieces AS assigned,
+             COALESCE(SUM(jd.total_pieces),0) AS completed,
+             ja.assigned_pieces - COALESCE(SUM(jd.total_pieces),0) AS pending
+        FROM jeans_assembly_assignments ja
+        JOIN stitching_data sd ON ja.stitching_assignment_id = sd.id
+        JOIN users u ON ja.user_id = u.id
+        LEFT JOIN jeans_assembly_data jd ON jd.assignment_id = ja.id
+       WHERE sd.lot_no LIKE ?
+       GROUP BY ja.id, sd.lot_no, u.username, ja.assigned_pieces
+       ORDER BY ja.assigned_on DESC
+       LIMIT ?, ?`;
+  } else if (dept === "washing") {
+    query = `
+      SELECT wa.id AS assignment_id, jd.lot_no, u.username,
+             wa.assigned_pieces AS assigned,
+             COALESCE(SUM(wd.total_pieces),0) AS completed,
+             wa.assigned_pieces - COALESCE(SUM(wd.total_pieces),0) AS pending
+        FROM washing_assignments wa
+        JOIN jeans_assembly_data jd ON wa.jeans_assembly_assignment_id = jd.id
+        JOIN users u ON wa.user_id = u.id
+        LEFT JOIN washing_data wd ON wd.washing_assignment_id = wa.id
+       WHERE jd.lot_no LIKE ?
+       GROUP BY wa.id, jd.lot_no, u.username, wa.assigned_pieces
+       ORDER BY wa.assigned_on DESC
+       LIMIT ?, ?`;
+  } else {
+    query = `
+      SELECT sa.id AS assignment_id, c.lot_no, u.username,
+             sa.assigned_pieces AS assigned,
+             COALESCE(SUM(sd.total_pieces),0) AS completed,
+             sa.assigned_pieces - COALESCE(SUM(sd.total_pieces),0) AS pending
+        FROM stitching_assignments sa
+        JOIN cutting_lots c ON sa.cutting_lot_id = c.id
+        JOIN users u ON sa.user_id = u.id
+        LEFT JOIN stitching_data sd ON sd.stitching_assignment_id = sa.id
+       WHERE c.lot_no LIKE ?
+       GROUP BY sa.id, c.lot_no, u.username, sa.assigned_pieces
+       ORDER BY sa.assigned_on DESC
+       LIMIT ?, ?`;
+  }
+  const [rows] = await pool.query(query, params);
+  return rows;
+}
+
+router.get("/dashboard/api/pendency", isAuthenticated, isOperator, async (req, res) => {
+  try {
+    const { dept = "stitching", page = 1, size = 50, search = "" } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(size);
+    const rows = await fetchPendencyRows(dept, `%${search}%`, offset, parseInt(size));
+    return res.json({ data: rows });
+  } catch (err) {
+    console.error("Error in /dashboard/api/pendency:", err);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.get("/dashboard/pendency/download", isAuthenticated, isOperator, async (req, res) => {
+  try {
+    const { dept = "stitching", search = "" } = req.query;
+    const rows = await fetchPendencyRows(dept, `%${search}%`, 0, 10000);
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Pendency");
+    sheet.columns = [
+      { header: "Lot No", key: "lot_no", width: 15 },
+      { header: "Operator", key: "username", width: 20 },
+      { header: "Assigned", key: "assigned", width: 12 },
+      { header: "Completed", key: "completed", width: 12 },
+      { header: "Pending", key: "pending", width: 12 }
+    ];
+    rows.forEach(r => sheet.addRow(r));
+    res.setHeader("Content-Disposition", `attachment; filename="${dept}_pendency.xlsx"`);
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error("Error in /dashboard/pendency/download:", err);
+    return res.status(500).send("Server error");
+  }
+});
+
+router.get("/dashboard/api/lot", isAuthenticated, isOperator, async (req, res) => {
+  try {
+    const { lotNo } = req.query;
+    if (!lotNo) return res.status(400).json({ error: "lotNo required" });
+    const [[lot]] = await pool.query(
+      `SELECT id, lot_no, sku, fabric_type, total_pieces FROM cutting_lots WHERE lot_no = ? LIMIT 1`,
+      [lotNo]
+    );
+    if (!lot) return res.status(404).json({ error: "Lot not found" });
+    const [sizes] = await pool.query(
+      `SELECT size_label, total_pieces FROM cutting_lot_sizes WHERE cutting_lot_id = ?`,
+      [lot.id]
+    );
+    return res.json({ lot, sizes });
+  } catch (err) {
+    console.error("Error in /dashboard/api/lot:", err);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
+
 /**************************************************
  * 4) CSV/Excel leftover exports – same as your code
  **************************************************/
