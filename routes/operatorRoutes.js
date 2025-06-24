@@ -473,7 +473,11 @@ async function fetchPendencyRows(dept, searchLike, offset, limit) {
         JOIN users u ON ja.user_id = u.id
         LEFT JOIN jeans_assembly_data jd ON jd.assignment_id = ja.id
        WHERE sd.lot_no LIKE ?
+
        GROUP BY ja.id, sd.lot_no, u.username, ja.assigned_pieces
+
+       GROUP BY ja.id
+
        ORDER BY ja.assigned_on DESC
        LIMIT ?, ?`;
   } else if (dept === "washing") {
@@ -487,7 +491,11 @@ async function fetchPendencyRows(dept, searchLike, offset, limit) {
         JOIN users u ON wa.user_id = u.id
         LEFT JOIN washing_data wd ON wd.washing_assignment_id = wa.id
        WHERE jd.lot_no LIKE ?
+
        GROUP BY wa.id, jd.lot_no, u.username, wa.assigned_pieces
+
+       GROUP BY wa.id
+
        ORDER BY wa.assigned_on DESC
        LIMIT ?, ?`;
   } else {
@@ -501,7 +509,10 @@ async function fetchPendencyRows(dept, searchLike, offset, limit) {
         JOIN users u ON sa.user_id = u.id
         LEFT JOIN stitching_data sd ON sd.stitching_assignment_id = sa.id
        WHERE c.lot_no LIKE ?
+
        GROUP BY sa.id, c.lot_no, u.username, sa.assigned_pieces
+       GROUP BY sa.id
+
        ORDER BY sa.assigned_on DESC
        LIMIT ?, ?`;
   }
