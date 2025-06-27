@@ -113,3 +113,47 @@ CREATE TABLE employees (
 
 Each supervisor can add, view and activate/deactivate only the employees that belong to them.
 
+
+## Employee Leaves
+
+Supervisors can track leaves for their employees using this table:
+
+```sql
+CREATE TABLE employee_leaves (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  employee_id INT NOT NULL,
+  leave_date DATE NOT NULL,
+  days DECIMAL(4,2) NOT NULL,
+  remark VARCHAR(255),
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (employee_id) REFERENCES employees(id)
+);
+```
+
+Employees earn 1.5 days of leave after completing three months of service. From the fourth month onward they accrue 1.5 days each month. The available balance is the accrued amount minus any rows stored in `employee_leaves`.
+
+## Employee Debits & Advances
+
+Supervisors may record financial debits or advances for their employees. Use separate tables linked to the employee:
+
+```sql
+CREATE TABLE employee_debits (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  employee_id INT NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  reason VARCHAR(255),
+  added_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (employee_id) REFERENCES employees(id)
+);
+
+CREATE TABLE employee_advances (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  employee_id INT NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  reason VARCHAR(255),
+  added_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (employee_id) REFERENCES employees(id)
+);
+```
+
+Debits represent losses caused by the employee, while advances are company funds lent to the employee. Supervisors can add entries for any of their own employees.

@@ -75,12 +75,13 @@
             <td><%= emp.salary_type %></td>
             <td><%= emp.date_of_joining.toISOString().slice(0,10) %></td>
             <td><%= emp.is_active ? 'Active' : 'Inactive' %></td>
-            <td>
+            <td class="d-flex gap-1">
               <form action="/supervisor/employees/<%= emp.id %>/toggle" method="POST">
                 <button class="btn btn-sm <%= emp.is_active ? 'btn-danger' : 'btn-success' %>">
                   <%= emp.is_active ? 'Deactivate' : 'Activate' %>
                 </button>
               </form>
+              <a href="/supervisor/employees/<%= emp.id %>/details" class="btn btn-sm btn-primary">Details</a>
             </td>
           </tr>
         <% }) %>
