@@ -79,6 +79,7 @@ const hrRoutes = require('./routes/hrRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
 const departmentMgmtRoutes = require('./routes/departmentMgmtRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
+const salaryRoutes = require('./routes/salaryRoutes');
 
 // Use Routes
 app.use('/', authRoutes);
@@ -102,6 +103,7 @@ app.use('/catalogupload', catalogR);
 app.use('/inventory', inventoryRoutes);
 app.use('/store-admin', storeAdminRoutes);
 app.use('/supervisor', employeeRoutes);
+app.use('/', salaryRoutes);
 
 app.use('/', hrRoutes);
 // Home Route
