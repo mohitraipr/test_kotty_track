@@ -386,8 +386,8 @@ async function computeAdvancedAnalytics(startDate, endDate) {
  **************************************************/
 router.get("/dashboard", isAuthenticated, isOperator, async (req, res) => {
   try {
-    const { search, startDate, endDate,
-      sortField="lot_no", sortOrder="asc", category="all" } = req.query;
+  const { search, startDate, endDate,
+      sortField="lot_no", sortOrder="asc", category="all", view } = req.query;
 
     // 1) operatorPerformance
     const operatorPerformance = await computeOperatorPerformance();
@@ -430,6 +430,20 @@ router.get("/dashboard", isAuthenticated, isOperator, async (req, res) => {
     // 6) advanced analytics
     const advancedAnalytics = await computeAdvancedAnalytics(startDate, endDate);
 
+    // salary summary if requested
+    const showSalary = view === "salary";
+    let salarySummary = [];
+    if (showSalary) {
+      const [rows] = await pool.query(`
+        SELECT u.name AS supervisor_name, u.id AS supervisor_id,
+               COUNT(e.id) AS employee_count,
+               SUM(CASE WHEN e.is_active = 1 THEN e.salary ELSE 0 END) AS total_salary
+          FROM users u
+          JOIN employees e ON e.supervisor_id = u.id
+         GROUP BY u.id`);
+      salarySummary = rows;
+    }
+
     // 7) render
     return res.render("operatorDashboard", {
       lotCount,
@@ -441,7 +455,9 @@ router.get("/dashboard", isAuthenticated, isOperator, async (req, res) => {
       advancedAnalytics,
       operatorPerformance,
       query: { search, startDate, endDate, sortField, sortOrder, category },
-      lotDetails: {}
+      lotDetails: {},
+      showSalarySection: showSalary,
+      salarySummary
     });
   } catch (err) {
     console.error("Error loading operator dashboard:", err);
