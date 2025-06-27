@@ -195,7 +195,12 @@ ALTER TABLE employees ADD COLUMN allotted_hours DECIMAL(4,2) NOT NULL DEFAULT 0;
 
 Operators can upload JSON attendance files. After upload each employee's punches
 are stored in `employee_attendance` and a monthly record is calculated in
+
+`employee_salaries`. These actions are available from the operator dashboard,
+which also lists each supervisor with their active employee count and total
+
 `employee_salaries`.
 
 A summary page lists each supervisor with their active employee count and total
+
 monthly salary.
