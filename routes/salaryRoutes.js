@@ -22,7 +22,11 @@ const upload = multer({ storage });
 
 // GET form to upload attendance JSON
 router.get('/salary/upload', isAuthenticated, isOperator, (req, res) => {
+
   res.redirect('/operator/dashboard?view=salary');
+
+  res.render('attendanceUpload', { user: req.session.user });
+
 });
 
 // POST process uploaded attendance JSON
@@ -30,7 +34,11 @@ router.post('/salary/upload', isAuthenticated, isOperator, upload.single('attFil
   const file = req.file;
   if (!file) {
     req.flash('error', 'No file uploaded');
+
     return res.redirect('/operator/dashboard?view=salary');
+
+    return res.redirect('/operator/salary/upload');
+
   }
   let data;
   try {
@@ -39,7 +47,11 @@ router.post('/salary/upload', isAuthenticated, isOperator, upload.single('attFil
   } catch (err) {
     console.error('Failed to parse JSON:', err);
     req.flash('error', 'Invalid JSON');
+
     return res.redirect('/operator/dashboard?view=salary');
+
+    return res.redirect('/operator/salary/upload');
+
   }
   const conn = await pool.getConnection();
   try {
@@ -68,12 +80,34 @@ router.post('/salary/upload', isAuthenticated, isOperator, upload.single('attFil
   } finally {
     conn.release();
   }
+
   res.redirect('/operator/dashboard?view=salary');
 });
 
 // View salary summary for operator
 router.get('/salaries', isAuthenticated, isOperator, (req, res) => {
   res.redirect('/operator/dashboard?view=salary');
+
+  res.redirect('/operator/salary/upload');
+});
+
+// View salary summary for operator
+router.get('/salaries', isAuthenticated, isOperator, async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT u.name AS supervisor_name, u.id AS supervisor_id,
+             COUNT(e.id) AS employee_count,
+             SUM(CASE WHEN e.is_active = 1 THEN e.salary ELSE 0 END) AS total_salary
+        FROM users u
+        JOIN employees e ON e.supervisor_id = u.id
+       GROUP BY u.id`);
+    res.render('operatorSalaries', { user: req.session.user, summary: rows });
+  } catch (err) {
+    console.error('Error loading salary summary:', err);
+    req.flash('error', 'Could not load salary summary');
+    res.redirect('/dashboard');
+  }
+
 });
 
 // Supervisor view of employee salary
