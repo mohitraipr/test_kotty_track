@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Employees</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark">
+  <div class="container-fluid">
+    <span class="navbar-brand">Employees - <%= department %></span>
+    <div class="ms-auto">
+      <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
+    </div>
+  </div>
+</nav>
+<div class="container my-4">
+  <%- include('partials/flashMessages') %>
+  <h4>Add Employee</h4>
+  <form action="/supervisor/employees" method="POST" class="row g-3 mb-4">
+    <div class="col-md-3">
+      <label class="form-label">Punching ID</label>
+      <input type="text" name="punching_id" class="form-control" required>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Name</label>
+      <input type="text" name="name" class="form-control" required>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Phone</label>
+      <input type="text" name="phone_number" class="form-control">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Date of Joining</label>
+      <input type="date" name="date_of_joining" class="form-control" required>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Salary</label>
+      <input type="number" step="0.01" name="salary" class="form-control" required>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Salary Type</label>
+      <select name="salary_type" class="form-select" required>
+        <option value="dihadi">Dihadi</option>
+        <option value="monthly">Monthly</option>
+      </select>
+    </div>
+    <div class="col-md-2 align-self-end">
+      <button type="submit" class="btn btn-success">Create</button>
+    </div>
+  </form>
+  <h4>My Employees</h4>
+  <div class="table-responsive">
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Punch ID</th>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Salary</th>
+          <th>Type</th>
+          <th>Joined</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% employees.forEach(emp => { %>
+          <tr>
+            <td><%= emp.punching_id %></td>
+            <td><%= emp.name %></td>
+            <td><%= emp.phone_number || '' %></td>
+            <td><%= emp.salary %></td>
+            <td><%= emp.salary_type %></td>
+            <td><%= emp.date_of_joining.toISOString().slice(0,10) %></td>
+            <td><%= emp.is_active ? 'Active' : 'Inactive' %></td>
+            <td>
+              <form action="/supervisor/employees/<%= emp.id %>/toggle" method="POST">
+                <button class="btn btn-sm <%= emp.is_active ? 'btn-danger' : 'btn-success' %>">
+                  <%= emp.is_active ? 'Deactivate' : 'Activate' %>
+                </button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
