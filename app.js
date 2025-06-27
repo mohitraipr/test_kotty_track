@@ -77,8 +77,6 @@ const catalogR = require('./routes/catalogupload');
 const storeAdminRoutes = require('./routes/storeAdminRoutes');
 const hrRoutes = require('./routes/hrRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
-const attendanceRoutes = require('./routes/attendanceRoutes');
-const supervisorRoutes = require('./routes/supervisorRoutes');
 
 // Use Routes
 app.use('/', authRoutes);
@@ -100,8 +98,6 @@ app.use('/washingin', washingIN);
 app.use('/catalogupload', catalogR);
 app.use('/inventory', inventoryRoutes);
 app.use('/store-admin', storeAdminRoutes);
-app.use('/attendance', attendanceRoutes);
-app.use('/supervisor', supervisorRoutes);
 
 app.use('/', hrRoutes);
 // Home Route
