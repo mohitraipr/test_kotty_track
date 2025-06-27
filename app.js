@@ -77,6 +77,7 @@ const catalogR = require('./routes/catalogupload');
 const storeAdminRoutes = require('./routes/storeAdminRoutes');
 const hrRoutes = require('./routes/hrRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
+const departmentMgmtRoutes = require('./routes/departmentMgmtRoutes');
 
 // Use Routes
 app.use('/', authRoutes);
@@ -93,6 +94,7 @@ app.use('/', searchRoutes);
 app.use('/assign-to-washing', assigntowashingRoutes);
 app.use('/jeansassemblydashboard', jeansAssemblyRoutes);
 app.use("/operator", editCuttingLotRoutes);
+app.use('/operator', departmentMgmtRoutes);
 app.use('/', bulkUploadRoutes);
 app.use('/washingin', washingIN);
 app.use('/catalogupload', catalogR);
