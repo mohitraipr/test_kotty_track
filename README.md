@@ -157,3 +157,44 @@ CREATE TABLE employee_advances (
 ```
 
 Debits represent losses caused by the employee, while advances are company funds lent to the employee. Supervisors can add entries for any of their own employees.
+
+## Attendance & Salary
+
+Add tables to track daily attendance and calculate monthly salaries:
+
+```sql
+CREATE TABLE employee_attendance (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  employee_id INT NOT NULL,
+  date DATE NOT NULL,
+  punch_in TIME,
+  punch_out TIME,
+  status ENUM('present','absent','one punch only') DEFAULT 'present',
+  UNIQUE KEY unique_att (employee_id, date),
+  FOREIGN KEY (employee_id) REFERENCES employees(id)
+);
+
+CREATE TABLE employee_salaries (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  employee_id INT NOT NULL,
+  month CHAR(7) NOT NULL, -- YYYY-MM
+  gross DECIMAL(10,2) NOT NULL,
+  deduction DECIMAL(10,2) NOT NULL,
+  net DECIMAL(10,2) NOT NULL,
+  created_at DATETIME NOT NULL,
+  UNIQUE KEY unique_salary (employee_id, month),
+  FOREIGN KEY (employee_id) REFERENCES employees(id)
+);
+```
+
+Update the `employees` table to store each worker's allotted hours per day:
+
+```sql
+ALTER TABLE employees ADD COLUMN allotted_hours DECIMAL(4,2) NOT NULL DEFAULT 0;
+```
+
+Operators can upload JSON attendance files. After upload each employee's punches
+are stored in `employee_attendance` and a monthly record is calculated in
+`employee_salaries`. These actions are available from the operator dashboard,
+which also lists each supervisor with their active employee count and total
+monthly salary.
