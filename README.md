@@ -91,3 +91,25 @@ CREATE TABLE department_supervisors (
 
 Operators can create departments and assign `supervisor` users to them from the Department Management screen.
 
+
+## Supervisor Employees
+
+To let supervisors manage their own employees, create the following table:
+
+```sql
+CREATE TABLE employees (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  supervisor_id INT NOT NULL,
+  punching_id VARCHAR(100) NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  phone_number VARCHAR(20),
+  salary DECIMAL(10,2) NOT NULL,
+  salary_type ENUM('dihadi', 'monthly') NOT NULL,
+  date_of_joining DATE NOT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  FOREIGN KEY (supervisor_id) REFERENCES users(id)
+);
+```
+
+Each supervisor can add, view and activate/deactivate only the employees that belong to them.
+
