@@ -30,7 +30,7 @@
           <label for="challanDate">Challan Date</label>
           <input type="date" class="form-control"
                  id="challanDate" name="challanDate"
-                 value="<%= new Date().toISOString().slice(0,10) %>" required>
+                value="<%= new Date().toLocaleDateString('en-CA') %>" required>
         </div>
 
         <div class="col-md-4 mb-3">

@@ -120,7 +120,7 @@
             <td><%= d.description_of_goods %> - <%= d.size %> <%= d.unit %></td>
             <td><%= d.quantity %></td>
             <td><%= d.remark || '' %></td>
-            <td><%= d.dispatched_at.toISOString().slice(0,16).replace('T',' ') %></td>
+            <td><%= d.dispatched_at.toLocaleString('en-CA', { hour12: false }) %></td>
           </tr>
         <% }) %>
       </tbody>

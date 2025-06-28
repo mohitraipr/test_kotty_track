@@ -51,7 +51,7 @@
     <tbody>
       <% leaves.forEach(l => { %>
         <tr>
-          <td><%= l.leave_date.toISOString().slice(0,10) %></td>
+          <td><%= l.leave_date.toLocaleDateString('en-CA') %></td>
           <td><%= l.days %></td>
           <td><%= l.remark || '' %></td>
         </tr>
@@ -83,7 +83,7 @@
     <tbody>
       <% debits.forEach(d => { %>
         <tr>
-          <td><%= d.added_at.toISOString().slice(0,10) %></td>
+          <td><%= d.added_at.toLocaleDateString('en-CA') %></td>
           <td><%= d.amount %></td>
           <td><%= d.reason || '' %></td>
         </tr>
@@ -115,7 +115,7 @@
     <tbody>
       <% advances.forEach(a => { %>
         <tr>
-          <td><%= a.added_at.toISOString().slice(0,10) %></td>
+          <td><%= a.added_at.toLocaleDateString('en-CA') %></td>
           <td><%= a.amount %></td>
           <td><%= a.reason || '' %></td>
         </tr>

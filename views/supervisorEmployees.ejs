@@ -90,7 +90,7 @@
             <td><%= emp.salary %></td>
             <td><%= emp.salary_type %></td>
             <td><%= emp.allotted_hours %></td>
-            <td><%= emp.date_of_joining.toISOString().slice(0,10) %></td>
+            <td><%= emp.date_of_joining.toLocaleDateString('en-CA') %></td>
             <td><%= emp.is_active ? 'Active' : 'Inactive' %></td>
             <td class="d-flex gap-1">
               <form action="/supervisor/employees/<%= emp.id %>/toggle" method="POST">

@@ -43,7 +43,7 @@
     <tbody>
       <% attendance.forEach(a => { %>
         <tr>
-          <td><%= a.date.toISOString().slice(0,10) %></td>
+          <td><%= a.date.toLocaleDateString('en-CA') %></td>
           <td><%= a.status %></td>
           <td><%= a.punch_in || '' %></td>
           <td><%= a.punch_out || '' %></td>
