@@ -19,12 +19,12 @@
       font-family: 'Poppins', sans-serif;
       margin: 0;
       padding-top: 70px;
-      background-color: #f8f9fa;
-      color: #343a40;
+      background-color: #f4f6f9;
+      color: #212529;
     }
     .dark-mode {
-      background-color: #1c1f22;
-      color: #e9ecef;
+      background-color: #121417;
+      color: #f8f9fa;
     }
     .top-nav {
       background: linear-gradient(90deg, #212529 0%, #2b2d30 100%);
@@ -42,39 +42,28 @@
       font-weight: 600;
       color: #f8f9fa !important;
     }
-    /* Sidebar styles */
-    #sidebar, .offcanvas-body {
-      background-color: #343a40;
-      padding: 1rem;
+    .nav-cards { display:flex; flex-wrap:wrap; gap:1rem; margin-bottom:1rem; }
+    .nav-card {
+      background:#ffffff;
+      border-radius:6px;
+      padding:1rem;
+      flex:1 0 180px;
+      text-align:center;
+      box-shadow:0 1px 3px rgba(0,0,0,0.1);
+      text-decoration:none;
+      color:inherit;
+      transition:background-color .2s ease, color .2s ease;
     }
-    #sidebar a, .offcanvas-body a {
-      color: #fff;
-      text-decoration: none;
-      display: block;
-      padding: 0.5rem 1rem;
-      margin-bottom: 0.5rem;
-      border-radius: 4px;
-    }
-    #sidebar a:hover, .offcanvas-body a:hover,
-    #sidebar a.active, .offcanvas-body a.active {
-      background-color: #0d6efd;
+    .nav-card:hover {
+      background:#0d6efd;
+      color:#fff;
     }
     .nav-cards { display:flex; flex-wrap:wrap; gap:1rem; }
     .nav-card { background:#fff; border-radius:6px; padding:1rem; flex:1 0 180px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-decoration:none; color:inherit; }
     .nav-card:hover { background:#0d6efd; color:#fff; }
-    /* Persistent sidebar for md and up */
+    /* Layout */
     @media (min-width: 768px) {
-      #sidebar {
-        position: fixed;
-        top: 70px;
-        left: 0;
-        bottom: 0;
-        width: 250px;
-        overflow-y: auto;
-      }
-      #mainContent {
-        margin-left: 260px;
-      }
+      .nav-cards { justify-content:flex-start; }
     }
     /* Stat boxes and panels */
     .stat-box {
@@ -113,33 +102,68 @@
     .table-responsive {
       overflow-x: auto;
     }
+    /* Pendency table styling */
+    .tabulator .tabulator-header {
+      background-color: #0d6efd;
+      color: #fff;
+    }
+    .tabulator .tabulator-row:nth-child(even) {
+      background-color: #f8f9fa;
+    }
+    .dark-mode .tabulator .tabulator-row:nth-child(even) {
+      background-color: #2b2d30;
+    }
   </style>
 </head>
 <body>
   <!-- Top Navigation Bar -->
-  <div class="top-nav d-flex justify-content-between align-items-center">
+  <header class="top-nav d-flex justify-content-between align-items-center" role="banner">
     <div class="nav-brand">Kotty Dashboard</div>
-    <button id="toggleDarkMode" class="btn btn-sm btn-outline-light">
-      <i class="bi bi-sun"></i>
+    <button id="toggleDarkMode" class="btn btn-sm btn-outline-light" aria-label="Toggle dark mode">
+      <i class="bi bi-sun" aria-hidden="true"></i>
+      <span class="visually-hidden">Toggle dark mode</span>
     </button>
-  </div>
+  </header>
 
-  <!-- Sidebar -->
-  <nav id="sidebar" class="offcanvas-md offcanvas-start show">
-    <a href="/operator/dashboard" class="active"><i class="bi bi-speedometer2"></i> Dashboard</a>
-    <a href="/operator/editcuttinglots"><i class="bi bi-pencil-square"></i> Edit Lots</a>
-    <a href="/operator/dashboard/download-all-lots"><i class="bi bi-cloud-arrow-down"></i> Export All</a>
-    <a href="/search-dashboard"><i class="bi bi-search"></i> Search</a>
-    <a href="/assign-to-washing"><i class="bi bi-arrow-right-circle"></i> Washing</a>
-    <a href="/operator/dashboard/pic-report"><i class="bi bi-file-earmark-check"></i> PIC Report</a>
-    <a href="/operator/departments"><i class="bi bi-wallet2"></i> Salaries</a>
-  </nav>
+
 
   <!-- Main Content Area -->
-  <div id="mainContent" class="container-fluid">
+  <main id="mainContent" class="container-fluid">
     <div class="portal-header my-3">
       <h1>Kotty Operator Dashboard</h1>
       <p class="text-muted">Enhanced Production Overview</p>
+    </div>
+
+    <!-- Navigation Cards -->
+    <div class="nav-cards">
+      <a href="/operator/dashboard" class="nav-card" aria-current="page">
+        <i class="bi bi-speedometer2 fs-3" aria-hidden="true"></i>
+        <div>Dashboard</div>
+      </a>
+      <a href="/operator/editcuttinglots" class="nav-card">
+        <i class="bi bi-pencil-square fs-3" aria-hidden="true"></i>
+        <div>Edit Lots</div>
+      </a>
+      <a href="/operator/dashboard/download-all-lots" class="nav-card">
+        <i class="bi bi-cloud-arrow-down fs-3" aria-hidden="true"></i>
+        <div>Export All</div>
+      </a>
+      <a href="/search-dashboard" class="nav-card">
+        <i class="bi bi-search fs-3" aria-hidden="true"></i>
+        <div>Search</div>
+      </a>
+      <a href="/assign-to-washing" class="nav-card">
+        <i class="bi bi-arrow-right-circle fs-3" aria-hidden="true"></i>
+        <div>Washing</div>
+      </a>
+      <a href="/operator/dashboard/pic-report" class="nav-card">
+        <i class="bi bi-file-earmark-check fs-3" aria-hidden="true"></i>
+        <div>PIC Report</div>
+      </a>
+      <a href="/operator/departments" class="nav-card">
+        <i class="bi bi-wallet2 fs-3" aria-hidden="true"></i>
+        <div>Salaries</div>
+      </a>
     </div>
 
     <!-- Stat Cards -->
@@ -261,32 +285,35 @@
         </div>
       </div>
       <div class="panel-body">
-        <input id="pendencySearchInput" type="text" class="form-control mb-2" placeholder="Search pendency...">
+        <input id="pendencySearchInput" type="text" class="form-control mb-2" placeholder="Search pendency..." aria-label="Search pendency">
         <div id="pendencyTable" style="height:400px;"></div>
-        <button id="loadMorePendency" class="btn btn-primary mt-2">Load More</button>
+        <button id="loadMorePendency" class="btn btn-primary mt-2" aria-label="Load more pendency results">Load More</button>
       </div>
-    </div>
   </div>
+  </main>
 
   <!-- Lot Details Modal -->
-  <div class="modal fade" id="lotDetailsModal" tabindex="-1">
+  <div class="modal fade" id="lotDetailsModal" tabindex="-1" aria-hidden="true" aria-labelledby="lotDetailsTitle">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Lot Details</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <h5 id="lotDetailsTitle" class="modal-title">Lot Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body" id="lotDetailsBody">
+        <div class="modal-body" id="lotDetailsBody" aria-live="polite">
           Loading...
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Back to Top Button -->
+  <button id="backToTop" class="btn btn-primary position-fixed" style="bottom:20px; right:20px; display:none;" aria-label="Back to top">&uarr; Top</button>
+
   <!-- Bootstrap & Tabulator JS -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+  <script src="https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.min.js" defer></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       // Dark Mode Toggle
@@ -378,6 +405,19 @@
       // Enable Bootstrap tooltips
       const tooltipList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
       tooltipList.forEach(el => new bootstrap.Tooltip(el));
+
+      // Back to top button
+      const backToTop = document.getElementById('backToTop');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 200) {
+          backToTop.style.display = 'block';
+        } else {
+          backToTop.style.display = 'none';
+        }
+      });
+      backToTop.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
     });
   </script>
 </body>
