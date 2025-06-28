@@ -94,14 +94,15 @@ router.post('/employees/:id/edit', isAuthenticated, isOperator, async (req, res)
     }
 
     const [[att]] = await conn.query('SELECT id, punch_in, punch_out FROM employee_attendance WHERE employee_id = ? AND date = ?', [empId, date]);
+    const newStatus = (punch_in && punch_out) ? 'present' : (punch_in || punch_out) ? 'one punch only' : 'absent';
     if (att) {
-      await conn.query('UPDATE employee_attendance SET punch_in = ?, punch_out = ? WHERE id = ?', [punch_in || null, punch_out || null, att.id]);
+      await conn.query('UPDATE employee_attendance SET punch_in = ?, punch_out = ?, status = ? WHERE id = ?', [punch_in || null, punch_out || null, newStatus, att.id]);
       await conn.query(
         'INSERT INTO attendance_edit_logs (employee_id, attendance_date, old_punch_in, old_punch_out, new_punch_in, new_punch_out, operator_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
         [empId, date, att.punch_in, att.punch_out, punch_in || null, punch_out || null, req.session.user.id]
       );
     } else {
-      await conn.query('INSERT INTO employee_attendance (employee_id, date, punch_in, punch_out, status) VALUES (?, ?, ?, ?, ?)', [empId, date, punch_in || null, punch_out || null, 'present']);
+      await conn.query('INSERT INTO employee_attendance (employee_id, date, punch_in, punch_out, status) VALUES (?, ?, ?, ?, ?)', [empId, date, punch_in || null, punch_out || null, newStatus]);
       await conn.query(
         'INSERT INTO attendance_edit_logs (employee_id, attendance_date, old_punch_in, old_punch_out, new_punch_in, new_punch_out, operator_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
         [empId, date, null, null, punch_in || null, punch_out || null, req.session.user.id]
