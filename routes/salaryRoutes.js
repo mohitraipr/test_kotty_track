@@ -107,8 +107,43 @@ router.get('/employees/:id/salary', isAuthenticated, isSupervisor, async (req, r
       return res.redirect('/supervisor/employees');
     }
     const [attendance] = await pool.query('SELECT * FROM employee_attendance WHERE employee_id = ? AND DATE_FORMAT(date, "%Y-%m") = ? ORDER BY date', [empId, month]);
+    const daysInMonth = moment(month + '-01').daysInMonth();
+    const dailyRate = parseFloat(emp.salary) / daysInMonth;
+    let paidUsed = 0;
+    attendance.forEach(a => {
+      if (a.punch_in && a.punch_out) {
+        const start = moment(a.punch_in, 'HH:mm:ss');
+        const end = moment(a.punch_out, 'HH:mm:ss');
+        a.hours = parseFloat((end.diff(start, 'minutes') / 60).toFixed(2));
+      } else {
+        a.hours = 0;
+      }
+      const isSun = moment(a.date).day() === 0;
+      if (isSun) {
+        if (a.status === 'present') {
+          if (parseFloat(emp.salary) < 13500) {
+            a.deduction_reason = 'Paid Sunday';
+          } else if (paidUsed < (emp.paid_sunday_allowance || 0)) {
+            a.deduction_reason = 'Paid Sunday (override)';
+            paidUsed++;
+          } else {
+            a.deduction_reason = 'Leave credited';
+          }
+        } else {
+          a.deduction_reason = '';
+        }
+      } else {
+        if (a.status === 'absent') {
+          a.deduction_reason = 'Absent';
+        } else if (a.status === 'one punch only') {
+          a.deduction_reason = 'One punch only';
+        } else {
+          a.deduction_reason = '';
+        }
+      }
+    });
     const [[salary]] = await pool.query('SELECT * FROM employee_salaries WHERE employee_id = ? AND month = ? LIMIT 1', [empId, month]);
-    res.render('employeeSalary', { user: req.session.user, employee: emp, attendance, salary, month });
+    res.render('employeeSalary', { user: req.session.user, employee: emp, attendance, salary, month, dailyRate });
   } catch (err) {
     console.error('Error loading salary view:', err);
     req.flash('error', 'Failed to load salary');

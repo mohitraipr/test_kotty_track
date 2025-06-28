@@ -106,6 +106,7 @@ CREATE TABLE employees (
   phone_number VARCHAR(20),
   salary DECIMAL(10,2) NOT NULL,
   salary_type ENUM('dihadi', 'monthly') NOT NULL,
+  paid_sunday_allowance INT NOT NULL DEFAULT 0,
   date_of_joining DATE NOT NULL,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   FOREIGN KEY (supervisor_id) REFERENCES users(id)
@@ -198,6 +199,9 @@ Add a `designation` field for each employee:
 
 ```sql
 ALTER TABLE employees ADD COLUMN designation VARCHAR(100) AFTER name;
+
+-- allow supervisors to specify a number of paid Sundays for each employee
+ALTER TABLE employees ADD COLUMN paid_sunday_allowance INT NOT NULL DEFAULT 0;
 ```
 
 Operators can upload JSON attendance files. After upload each employee's punches
@@ -211,6 +215,17 @@ which also lists each supervisor with their active employee count and total
 A summary page lists each supervisor with their active employee count and total
 
 monthly salary.
+
+### Sunday Attendance Rules
+
+Employees whose monthly salary is below 13,500 receive an extra day's pay for every Sunday they work.
+For employees earning 13,500 or more, working on a Sunday does not increase pay but instead grants a leave day.
+Supervisors may override this by assigning a `paid_sunday_allowance` value for a worker.  The allowance
+specifies how many Sundays in a month are paid regardless of salary; additional worked Sundays become
+leave days.
+
+The salary view lists each day's hours worked along with a note explaining any deductions, so supervisors
+can easily trace why pay was reduced.
 
 ## Attendance Edit Logs
 
