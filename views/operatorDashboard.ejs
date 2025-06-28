@@ -19,12 +19,12 @@
       font-family: 'Poppins', sans-serif;
       margin: 0;
       padding-top: 70px;
-      background-color: #f8f9fa;
-      color: #343a40;
+      background-color: #f4f6f9;
+      color: #212529;
     }
     .dark-mode {
-      background-color: #1c1f22;
-      color: #e9ecef;
+      background-color: #121417;
+      color: #f8f9fa;
     }
     .top-nav {
       background: linear-gradient(90deg, #212529 0%, #2b2d30 100%);
@@ -42,39 +42,28 @@
       font-weight: 600;
       color: #f8f9fa !important;
     }
-    /* Sidebar styles */
-    #sidebar, .offcanvas-body {
-      background-color: #343a40;
-      padding: 1rem;
+    .nav-cards { display:flex; flex-wrap:wrap; gap:1rem; margin-bottom:1rem; }
+    .nav-card {
+      background:#ffffff;
+      border-radius:6px;
+      padding:1rem;
+      flex:1 0 180px;
+      text-align:center;
+      box-shadow:0 1px 3px rgba(0,0,0,0.1);
+      text-decoration:none;
+      color:inherit;
+      transition:background-color .2s ease, color .2s ease;
     }
-    #sidebar a, .offcanvas-body a {
-      color: #fff;
-      text-decoration: none;
-      display: block;
-      padding: 0.5rem 1rem;
-      margin-bottom: 0.5rem;
-      border-radius: 4px;
-    }
-    #sidebar a:hover, .offcanvas-body a:hover,
-    #sidebar a.active, .offcanvas-body a.active {
-      background-color: #0d6efd;
+    .nav-card:hover {
+      background:#0d6efd;
+      color:#fff;
     }
     .nav-cards { display:flex; flex-wrap:wrap; gap:1rem; }
     .nav-card { background:#fff; border-radius:6px; padding:1rem; flex:1 0 180px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-decoration:none; color:inherit; }
     .nav-card:hover { background:#0d6efd; color:#fff; }
-    /* Persistent sidebar for md and up */
+    /* Layout */
     @media (min-width: 768px) {
-      #sidebar {
-        position: fixed;
-        top: 70px;
-        left: 0;
-        bottom: 0;
-        width: 250px;
-        overflow-y: auto;
-      }
-      #mainContent {
-        margin-left: 260px;
-      }
+      .nav-cards { justify-content:flex-start; }
     }
     /* Stat boxes and panels */
     .stat-box {
@@ -113,6 +102,17 @@
     .table-responsive {
       overflow-x: auto;
     }
+    /* Pendency table styling */
+    .tabulator .tabulator-header {
+      background-color: #0d6efd;
+      color: #fff;
+    }
+    .tabulator .tabulator-row:nth-child(even) {
+      background-color: #f8f9fa;
+    }
+    .dark-mode .tabulator .tabulator-row:nth-child(even) {
+      background-color: #2b2d30;
+    }
   </style>
 </head>
 <body>
@@ -124,6 +124,48 @@
       <span class="visually-hidden">Toggle dark mode</span>
     </button>
   </header>
+
+
+
+
+  <!-- Main Content Area -->
+  <main id="mainContent" class="container-fluid">
+    <div class="portal-header my-3">
+      <h1>Kotty Operator Dashboard</h1>
+      <p class="text-muted">Enhanced Production Overview</p>
+    </div>
+
+    <!-- Navigation Cards -->
+    <div class="nav-cards">
+      <a href="/operator/dashboard" class="nav-card" aria-current="page">
+        <i class="bi bi-speedometer2 fs-3" aria-hidden="true"></i>
+        <div>Dashboard</div>
+      </a>
+      <a href="/operator/editcuttinglots" class="nav-card">
+        <i class="bi bi-pencil-square fs-3" aria-hidden="true"></i>
+        <div>Edit Lots</div>
+      </a>
+      <a href="/operator/dashboard/download-all-lots" class="nav-card">
+        <i class="bi bi-cloud-arrow-down fs-3" aria-hidden="true"></i>
+        <div>Export All</div>
+      </a>
+      <a href="/search-dashboard" class="nav-card">
+        <i class="bi bi-search fs-3" aria-hidden="true"></i>
+        <div>Search</div>
+      </a>
+      <a href="/assign-to-washing" class="nav-card">
+        <i class="bi bi-arrow-right-circle fs-3" aria-hidden="true"></i>
+        <div>Washing</div>
+      </a>
+      <a href="/operator/dashboard/pic-report" class="nav-card">
+        <i class="bi bi-file-earmark-check fs-3" aria-hidden="true"></i>
+        <div>PIC Report</div>
+      </a>
+      <a href="/operator/departments" class="nav-card">
+        <i class="bi bi-wallet2 fs-3" aria-hidden="true"></i>
+        <div>Salaries</div>
+      </a>
+    </div>
 
   <!-- Sidebar -->
   <nav id="sidebar" class="offcanvas-md offcanvas-start show" role="navigation" aria-label="Main navigation">
@@ -142,6 +184,7 @@
       <h1>Kotty Operator Dashboard</h1>
       <p class="text-muted">Enhanced Production Overview</p>
     </div>
+
 
     <!-- Stat Cards -->
     <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 mb-4">
