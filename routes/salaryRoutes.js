@@ -10,6 +10,7 @@ const { validateAttendanceFilename } = require('../helpers/attendanceFilenameVal
 const XLSX = require('xlsx');
 const ExcelJS = require('exceljs');
 
+
 // Configure upload for JSON files in memory
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -130,6 +131,7 @@ router.post('/salary/upload-nights', isAuthenticated, isOperator, upload.single(
   res.redirect('/operator/departments');
 });
 
+
 // GET night shift Excel template
 router.get('/salary/night-template', isAuthenticated, isOperator, async (req, res) => {
   try {
@@ -153,6 +155,7 @@ router.get('/salary/night-template', isAuthenticated, isOperator, async (req, re
     return res.redirect('/operator/departments');
   }
 });
+
 
 // View salary summary for operator
 router.get('/salaries', isAuthenticated, isOperator, (req, res) => {
