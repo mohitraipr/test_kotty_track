@@ -77,6 +77,15 @@
       <a href="/salary/night-template" class="btn btn-success">Download Night Template</a>
     </div>
 
+    <form action="/operator/departments/salary/download" method="GET" class="row g-3 mb-3">
+      <div class="col-auto">
+        <input type="month" name="month" class="form-control" value="<%= currentMonth %>" required>
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-success">Download Salary Excel</button>
+      </div>
+    </form>
+
 
     <div class="table-responsive">
       <table class="table table-bordered">
