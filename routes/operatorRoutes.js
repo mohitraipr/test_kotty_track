@@ -477,8 +477,6 @@ async function fetchPendencyRows(dept, searchLike, offset, limit) {
 
        GROUP BY ja.id, sd.lot_no, u.username, ja.assigned_pieces
 
-       GROUP BY ja.id
-
        ORDER BY ja.assigned_on DESC
        LIMIT ?, ?`;
   } else if (dept === "washing") {
@@ -495,8 +493,6 @@ async function fetchPendencyRows(dept, searchLike, offset, limit) {
 
        GROUP BY wa.id, jd.lot_no, u.username, wa.assigned_pieces
 
-       GROUP BY wa.id
-
        ORDER BY wa.assigned_on DESC
        LIMIT ?, ?`;
   } else {
@@ -512,7 +508,6 @@ async function fetchPendencyRows(dept, searchLike, offset, limit) {
        WHERE c.lot_no LIKE ?
 
        GROUP BY sa.id, c.lot_no, u.username, sa.assigned_pieces
-       GROUP BY sa.id
 
        ORDER BY sa.assigned_on DESC
        LIMIT ?, ?`;
