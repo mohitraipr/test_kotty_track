@@ -109,24 +109,6 @@
     .panel-body {
       padding: 1rem;
     }
-    .leftover-value {
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-weight: 600;
-      margin-right: 5px;
-    }
-    .leftover-zero {
-      background-color: #f8d7da;
-      color: #721c24;
-    }
-    .leftover-nonzero {
-      background-color: #cce5ff;
-      color: #004085;
-    }
-    .leftover-unassigned {
-      color: #dc3545;
-      font-weight: 700;
-    }
     /* Responsive table adjustments */
     .table-responsive {
       overflow-x: auto;
@@ -161,7 +143,6 @@
       <a href="/operator/dashboard" class="active"><i class="bi bi-speedometer2"></i> Dashboard</a>
       <a href="/operator/editcuttinglots"><i class="bi bi-pencil-square"></i> Edit Lots</a>
       <a href="/operator/dashboard/download-all-lots"><i class="bi bi-cloud-arrow-down"></i> Export All</a>
-      <a href="/operator/dashboard/leftovers/download"><i class="bi bi-file-earmark-arrow-down"></i> Leftover CSV</a>
       <a href="/search-dashboard"><i class="bi bi-search"></i> Search</a>
       <a href="#" onclick="window.print()"><i class="bi bi-printer"></i> Print</a>
       <a href="/assign-to-washing"><i class="bi bi-arrow-right-circle"></i> Washing</a>
@@ -198,7 +179,6 @@
     <a href="/operator/dashboard" class="active"><i class="bi bi-speedometer2"></i> Dashboard</a>
     <a href="/operator/editcuttinglots"><i class="bi bi-pencil-square"></i> Edit Lots</a>
     <a href="/operator/dashboard/download-all-lots"><i class="bi bi-cloud-arrow-down"></i> Export All</a>
-    <a href="/operator/dashboard/leftovers/download"><i class="bi bi-file-earmark-arrow-down"></i> Leftover CSV</a>
     <a href="/search-dashboard"><i class="bi bi-search"></i> Search</a>
     <a href="#" onclick="window.print()"><i class="bi bi-printer"></i> Print</a>
     <a href="/assign-to-washing"><i class="bi bi-arrow-right-circle"></i> Washing</a>
@@ -217,7 +197,7 @@
   <div id="mainContent" class="container-fluid">
     <div class="portal-header my-3">
       <h1>Kotty Operator Dashboard</h1>
-      <p class="text-muted">Enhanced Production &amp; Leftover Overview</p>
+      <p class="text-muted">Enhanced Production Overview</p>
     </div>
 
     <!-- Stat Cards -->
@@ -358,69 +338,6 @@
         </div>
       </div>
 
-      <!-- Tabs for Leftovers and Notes -->
-      <ul class="nav nav-tabs" id="inventoryTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-          <button class="nav-link active" id="leftover-tab" data-bs-toggle="tab" data-bs-target="#leftoverPanel" type="button" role="tab">
-            <i class="bi bi-box-seam"></i> Leftovers
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notesPanel" type="button" role="tab">
-            <i class="bi bi-chat-left-text"></i> Notes
-          </button>
-        </li>
-      </ul>
-      <div class="tab-content">
-        <!-- Leftovers Tab -->
-        <div class="tab-pane fade show active" id="leftoverPanel" role="tabpanel">
-          <div class="data-panel mt-3">
-            <div class="panel-header">
-              <i class="bi bi-box2"></i> Leftovers (Lazy Loaded)
-            </div>
-            <div class="panel-body">
-              <div class="mb-3">
-                <label class="form-check-label me-2">Show:</label>
-                <div class="form-check form-check-inline">
-                  <input class="form-check-input" type="radio" name="lotType" id="allLots" value="all" checked>
-                  <label class="form-check-label" for="allLots">All</label>
-                </div>
-                <div class="form-check form-check-inline">
-                  <input class="form-check-input" type="radio" name="lotType" id="akshayLots" value="akshay">
-                  <label class="form-check-label" for="akshayLots">Akshay</label>
-                </div>
-                <div class="form-check form-check-inline">
-                  <input class="form-check-input" type="radio" name="lotType" id="nonAkshayLots" value="non-akshay">
-                  <label class="form-check-label" for="nonAkshayLots">Non-Akshay</label>
-                </div>
-              </div>
-              <div class="mb-3 d-flex justify-content-between align-items-center">
-                <input id="leftoverSearchInput" type="text" class="form-control me-2" placeholder="Global search in Leftovers...">
-                <button id="columnChooser" class="btn btn-outline-secondary">Columns</button>
-              </div>
-              <div id="leftoverTable" style="height:500px;"></div>
-              <button id="loadMoreLeftovers" class="btn btn-primary mt-2">Load More</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Notes Tab -->
-        <div class="tab-pane fade" id="notesPanel" role="tabpanel">
-          <div class="data-panel mt-3">
-            <div class="panel-header">
-              <i class="bi bi-chat-left-text"></i> Dashboard Notes
-            </div>
-            <div class="panel-body">
-              <ul>
-                <li><strong>Hidden Columns:</strong> Assembly and Wash columns are hidden for non-Akshay lots.</li>
-                <li><strong>Total Leftover:</strong> cutting_lots.total_pieces – sum(finishing_dispatches.quantity)</li>
-                <li><strong>Dispatch Leftover:</strong> sum(finishing_data.total_pieces) – sum(finishing_dispatches.quantity)</li>
-                <li><strong>Dark Mode:</strong> Toggled with localStorage.</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <!-- Advanced Analytics Panel -->
       <div class="data-panel mt-4">
@@ -539,20 +456,6 @@
     </div>
     <% }); %>
 
-    <!-- Column Chooser Modal -->
-    <div class="modal fade" id="columnChooserModal" tabindex="-1" aria-labelledby="columnChooserModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="columnChooserModalLabel">Select Columns</h5>
-            <button type="button" class="btn btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <div id="columnChooserContent"></div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Done</button>
-          </div>
         </div>
       </div>
     </div>
@@ -578,148 +481,6 @@
       toggleDarkModeBtn.innerHTML = body.classList.contains('dark-mode') ? '<i class="bi bi-moon"></i>' : '<i class="bi bi-sun"></i>';
     });
 
-    /*************************************************
-     * Tabulator for Leftovers – Lazy Loading with Column Filters
-     *************************************************/
-    let leftoverPage = 1;
-    const leftoverSize = 100;
-    let leftoverSearch = '';
-    let leftoverData = [];
-
-    const leftoverColumns = [
-      { title: "Kit #", field: "kitNumber", headerFilter:"input", width: 100 },
-      { title: "SKU", field: "sku", headerFilter:"input", width: 150 },
-      { title: "Total Pieces", field: "totalPieces", headerFilter:"input", width: 120 },
-      { title: "Stitch Leftover", field: "leftoverStitch", headerFilter:"input", width: 140,
-        formatter: formatLeftoverWithOperator, formatterParams: { operatorField: "stitchingOperator" } },
-      { title: "Assembly Leftover", field: "leftoverAssembly", headerFilter:"input", width: 140,
-        formatter: formatLeftoverWithOperator, formatterParams: { operatorField: "assemblyOperator" } },
-      { title: "Wash Leftover", field: "leftoverWash", headerFilter:"input", width: 140,
-        formatter: formatLeftoverWithOperator, formatterParams: { operatorField: "washOperator" } },
-      { title: "Finish Leftover", field: "leftoverFinish", headerFilter:"input", width: 140,
-        formatter: formatLeftoverWithOperator, formatterParams: { operatorField: "finishOperator" } },
-      { title: "Remarks", field: "remark", headerFilter:"input", width: 150 },
-      { title: "Total Leftover", field: "totalPiecesLeft", headerFilter:"input", width: 140, formatter: formatLeftover },
-      { title: "Dispatch Leftover", field: "dispatchLeftover", headerFilter:"input", width: 140, formatter: formatLeftover }
-    ];
-
-    function formatLeftoverWithOperator(cell, formatterParams){
-      const value = cell.getValue();
-      const row = cell.getRow().getData();
-      const operatorField = formatterParams.operatorField;
-      const operator = row[operatorField] || 'N/A';
-      if(typeof value === "number"){
-        const cls = value === 0 ? "leftover-zero" : "leftover-nonzero";
-        let html = `<span class="leftover-value ${cls}">${value}</span>`;
-        if(operatorField && operator.toLowerCase() !== "n/a"){
-          html += ` <small class="text-muted">(User: ${operator})</small>`;
-        } else if(operatorField){
-          html += ` <small class="leftover-unassigned">(Unassigned)</small>`;
-        }
-        return html;
-      }
-      return value;
-    }
-    function formatLeftover(cell){
-      const value = cell.getValue();
-      if(typeof value === "number"){
-        const cls = value === 0 ? "leftover-zero" : "leftover-nonzero";
-        return `<span class="leftover-value ${cls}">${value}</span>`;
-      }
-      return value;
-    }
-
-    const leftoverTable = new Tabulator("#leftoverTable", {
-      layout: "fitColumns",
-      movableColumns: true,
-      pagination: "local",
-      paginationSize: leftoverSize,
-      columns: leftoverColumns,
-      placeholder: "No Data Loaded"
-    });
-
-    async function loadLeftoverPage(pageNum) {
-      try {
-        const response = await fetch(`/operator/dashboard/api/leftovers?page=${pageNum}&size=${leftoverSize}&search=${encodeURIComponent(leftoverSearch)}`);
-        if (!response.ok) throw new Error(response.statusText);
-        const json = await response.json();
-        if(pageNum === 1){
-          leftoverData = json.data;
-          leftoverTable.setData(leftoverData);
-        } else {
-          leftoverData = leftoverData.concat(json.data);
-          leftoverTable.replaceData(leftoverData);
-        }
-      } catch (err) {
-        console.error("Error loading leftovers:", err);
-      }
-    }
-    loadLeftoverPage(1);
-    document.getElementById("loadMoreLeftovers").addEventListener("click", function(){
-      leftoverPage++;
-      loadLeftoverPage(leftoverPage);
-    });
-    document.getElementById("leftoverSearchInput").addEventListener("keyup", function(){
-      leftoverSearch = this.value;
-      leftoverPage = 1;
-      loadLeftoverPage(1);
-    });
-    function updateLeftoverFilter(){
-      const mode = document.querySelector('input[name="lotType"]:checked')?.value || "all";
-      if(mode === "all"){
-        leftoverTable.clearFilter("lotType");
-        leftoverTable.getColumn("leftoverAssembly")?.show();
-        leftoverTable.getColumn("leftoverWash")?.show();
-      } else if(mode === "akshay"){
-        leftoverTable.setFilter("lotType", "=", "akshay");
-        leftoverTable.getColumn("leftoverAssembly")?.show();
-        leftoverTable.getColumn("leftoverWash")?.show();
-      } else {
-        leftoverTable.setFilter(data => data.lotType !== "akshay");
-        leftoverTable.getColumn("leftoverAssembly")?.hide();
-        leftoverTable.getColumn("leftoverWash")?.hide();
-      }
-      leftoverTable.redraw();
-    }
-    document.querySelectorAll('input[name="lotType"]').forEach(radio => {
-      radio.addEventListener("change", updateLeftoverFilter);
-    });
-  document.getElementById("columnChooser").addEventListener("click", function() {
-      const columns = leftoverTable.getColumns();
-      const container = document.getElementById("columnChooserContent");
-      container.innerHTML = "";
-      columns.forEach(function(col){
-        const field = col.getField();
-        if(field){
-          const title = col.getDefinition().title;
-          const isVisible = col.isVisible();
-          const checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
-          checkbox.checked = isVisible;
-          checkbox.setAttribute("data-field", field);
-          checkbox.classList.add("form-check-input", "me-2");
-          const label = document.createElement("label");
-          label.classList.add("form-check-label");
-          label.textContent = title;
-          const div = document.createElement("div");
-          div.classList.add("form-check", "mb-2");
-          div.appendChild(checkbox);
-          div.appendChild(label);
-          container.appendChild(div);
-          checkbox.addEventListener("change", function(){
-            if(this.checked){
-              leftoverTable.getColumn(field).show();
-            } else {
-              leftoverTable.getColumn(field).hide();
-            }
-          });
-        }
-      });
-      const modal = new bootstrap.Modal(document.getElementById("columnChooserModal"));
-      modal.show();
-    });
-
-    /*************************************************
      * Pendency Table
      *************************************************/
     let pendencyPage = 1;
