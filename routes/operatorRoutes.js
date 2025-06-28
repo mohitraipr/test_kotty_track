@@ -498,6 +498,24 @@ async function fetchPendencyRows(dept, searchLike, offset, limit) {
   } else {
     query = `
       SELECT sa.id AS assignment_id, c.lot_no, u.username,
+             c.total_pieces AS assigned,
+             COALESCE(SUM(sd.total_pieces),0) AS completed,
+             c.total_pieces - COALESCE(SUM(sd.total_pieces),0) AS pending
+        FROM stitching_assignments sa
+        JOIN cutting_lots c ON sa.cutting_lot_id = c.id
+        JOIN users u ON sa.user_id = u.id
+        LEFT JOIN stitching_data sd ON sd.stitching_assignment_id = sa.id
+       WHERE c.lot_no LIKE ?
+
+       GROUP BY sa.id, c.lot_no, u.username, c.total_pieces
+
+       ORDER BY sa.assigned_on DESC
+       LIMIT ?, ?`;
+  }
+
+  } else {
+    query = `
+      SELECT sa.id AS assignment_id, c.lot_no, u.username,
              sa.assigned_pieces AS assigned,
              COALESCE(SUM(sd.total_pieces),0) AS completed,
              sa.assigned_pieces - COALESCE(SUM(sd.total_pieces),0) AS pending
@@ -512,6 +530,7 @@ async function fetchPendencyRows(dept, searchLike, offset, limit) {
        ORDER BY sa.assigned_on DESC
        LIMIT ?, ?`;
   }
+
   const [rows] = await pool.query(query, params);
   return rows;
 }
