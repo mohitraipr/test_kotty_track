@@ -23,7 +23,7 @@ const upload = multer({ storage });
 // GET form to upload attendance JSON
 router.get('/salary/upload', isAuthenticated, isOperator, (req, res) => {
 
-  res.redirect('/operator/dashboard?view=salary');
+  res.redirect('/operator/departments?view=salary');
 
   res.render('attendanceUpload', { user: req.session.user });
 
@@ -35,9 +35,7 @@ router.post('/salary/upload', isAuthenticated, isOperator, upload.single('attFil
   if (!file) {
     req.flash('error', 'No file uploaded');
 
-    return res.redirect('/operator/dashboard?view=salary');
-
-    return res.redirect('/operator/salary/upload');
+    return res.redirect('/operator/departments?view=salary');
 
   }
   let data;
@@ -48,9 +46,7 @@ router.post('/salary/upload', isAuthenticated, isOperator, upload.single('attFil
     console.error('Failed to parse JSON:', err);
     req.flash('error', 'Invalid JSON');
 
-    return res.redirect('/operator/dashboard?view=salary');
-
-    return res.redirect('/operator/salary/upload');
+    return res.redirect('/operator/departments?view=salary');
 
   }
   const conn = await pool.getConnection();
@@ -81,14 +77,12 @@ router.post('/salary/upload', isAuthenticated, isOperator, upload.single('attFil
     conn.release();
   }
 
-  res.redirect('/operator/dashboard?view=salary');
+  res.redirect('/operator/departments?view=salary');
 });
 
 // View salary summary for operator
 router.get('/salaries', isAuthenticated, isOperator, (req, res) => {
-  res.redirect('/operator/dashboard?view=salary');
-
-  res.redirect('/operator/salary/upload');
+  res.redirect('/operator/departments?view=salary');
 });
 
 // View salary summary for operator
