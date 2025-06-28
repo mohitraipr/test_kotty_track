@@ -126,6 +126,7 @@ router.post('/departments/salary/upload', isAuthenticated, isOperator, upload.si
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
+    let uploadedCount = 0;
     for (const emp of data) {
       const [empRows] = await conn.query('SELECT id, salary, salary_type FROM employees WHERE punching_id = ? AND name = ? LIMIT 1', [emp.punchingId, emp.name]);
       if (!empRows.length) continue;
@@ -140,9 +141,10 @@ router.post('/departments/salary/upload', isAuthenticated, isOperator, upload.si
       }
       const month = moment(data[0].attendance[0].date).format('YYYY-MM');
       await calculateSalaryForMonth(conn, employee.id, month);
+      uploadedCount++;
     }
     await conn.commit();
-    req.flash('success', 'Attendance uploaded');
+    req.flash('success', `Attendance uploaded for ${uploadedCount} employees`);
   } catch (err) {
     await conn.rollback();
     console.error('Error processing attendance:', err);
