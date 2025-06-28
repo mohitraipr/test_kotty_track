@@ -10,7 +10,9 @@ async function calculateSalaryForMonth(conn, employeeId, month) {
   const daysInMonth = moment(month + '-01').daysInMonth();
   const dailyRate = parseFloat(emp.salary) / daysInMonth;
   let absent = 0;
-  attendance.forEach(a => { if (a.status === 'absent') absent++; });
+  attendance.forEach(a => {
+    if (a.status === 'absent' || a.status === 'one punch only') absent++;
+  });
   const gross = parseFloat(emp.salary);
   const deduction = absent * dailyRate;
   const net = gross - deduction;
