@@ -8,6 +8,8 @@ const { isAuthenticated, isOperator, isSupervisor } = require('../middlewares/au
 const { calculateSalaryForMonth } = require('../helpers/salaryCalculator');
 const { validateAttendanceFilename } = require('../helpers/attendanceFilenameValidator');
 const XLSX = require('xlsx');
+const ExcelJS = require('exceljs');
+
 
 // Configure upload for JSON files in memory
 const upload = multer({ storage: multer.memoryStorage() });
@@ -128,6 +130,32 @@ router.post('/salary/upload-nights', isAuthenticated, isOperator, upload.single(
 
   res.redirect('/operator/departments');
 });
+
+
+// GET night shift Excel template
+router.get('/salary/night-template', isAuthenticated, isOperator, async (req, res) => {
+  try {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('NightTemplate');
+    sheet.columns = [
+      { header: 'supervisorname', key: 'supervisorname', width: 20 },
+      { header: 'supervisordepartment', key: 'supervisordepartment', width: 20 },
+      { header: 'punchingid', key: 'punchingid', width: 15 },
+      { header: 'name', key: 'name', width: 20 },
+      { header: 'nights', key: 'nights', width: 10 },
+      { header: 'month', key: 'month', width: 12 }
+    ];
+    res.setHeader('Content-Disposition', 'attachment; filename="NightShiftTemplate.xlsx"');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    await workbook.xlsx.write(res);
+    return res.end();
+  } catch (err) {
+    console.error('Error downloading night template:', err);
+    req.flash('error', 'Error downloading night template');
+    return res.redirect('/operator/departments');
+  }
+});
+
 
 // View salary summary for operator
 router.get('/salaries', isAuthenticated, isOperator, (req, res) => {

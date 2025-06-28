@@ -269,3 +269,6 @@ CREATE TABLE employee_nights (
 
 Uploading a sheet increases the employee's salary by `nights * (salary / days_in_month)` for the current month. Duplicate uploads for the same employee and month are ignored.
 
+Operators can download an Excel template for this upload via the `/salary/night-template` route. The file includes the following columns:
+`supervisorname`, `supervisordepartment`, `punchingid`, `name`, `nights`, `month`.
+
