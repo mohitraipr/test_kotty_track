@@ -504,7 +504,9 @@ async function fetchPendencyRows(dept, searchLike, offset, limit) {
         FROM stitching_assignments sa
         JOIN cutting_lots c ON sa.cutting_lot_id = c.id
         JOIN users u ON sa.user_id = u.id
-        LEFT JOIN stitching_data sd ON sd.stitching_assignment_id = sa.id
+        LEFT JOIN stitching_data sd
+               ON sd.user_id = sa.user_id
+              AND sd.lot_no = c.lot_no
        WHERE c.lot_no LIKE ?
 
        GROUP BY sa.id, c.lot_no, u.username, c.total_pieces
