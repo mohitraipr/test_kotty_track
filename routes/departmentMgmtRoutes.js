@@ -4,25 +4,15 @@ const { pool } = require('../config/db');
 const { isAuthenticated, isOperator } = require('../middlewares/auth');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
 const moment = require('moment');
 const { calculateSalaryForMonth } = require('../helpers/salaryCalculator');
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    const newName = Date.now() + path.extname(file.originalname);
-    cb(null, newName);
-  }
-});
-const upload = multer({ storage });
+const upload = multer({ storage: multer.memoryStorage() });
 
 // GET /operator/departments - list departments and supervisors
 router.get('/departments', isAuthenticated, isOperator, async (req, res) => {
   try {
-    const showSalary = req.query.view === 'salary';
+    const showSalary = true;
     const [deptRows] = await pool.query(
       `SELECT d.id, d.name,
               GROUP_CONCAT(u.username ORDER BY u.username SEPARATOR ', ') AS supervisors
@@ -114,16 +104,24 @@ router.post('/departments/salary/upload', isAuthenticated, isOperator, upload.si
   const file = req.file;
   if (!file) {
     req.flash('error', 'No file uploaded');
-    return res.redirect('/operator/departments?view=salary');
+    return res.redirect('/operator/departments');
   }
+
+  const base = path.basename(file.originalname, path.extname(file.originalname));
+  const parts = base.split('_');
+  if (parts.length !== 3 || !/^[0-9]+$/.test(parts[2])) {
+    req.flash('error', 'Filename must follow departmentname_supervisorusername_supervisoruserid');
+    return res.redirect('/operator/departments');
+  }
+
   let data;
   try {
-    const jsonStr = fs.readFileSync(file.path, 'utf8');
+    const jsonStr = file.buffer.toString('utf8');
     data = JSON.parse(jsonStr);
   } catch (err) {
     console.error('Failed to parse JSON:', err);
     req.flash('error', 'Invalid JSON');
-    return res.redirect('/operator/departments?view=salary');
+    return res.redirect('/operator/departments');
   }
   const conn = await pool.getConnection();
   try {
@@ -153,7 +151,7 @@ router.post('/departments/salary/upload', isAuthenticated, isOperator, upload.si
     conn.release();
   }
 
-  res.redirect('/operator/departments?view=salary');
+  res.redirect('/operator/departments');
 });
 
 module.exports = router;

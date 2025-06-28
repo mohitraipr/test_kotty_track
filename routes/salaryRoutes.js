@@ -2,31 +2,17 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
 const moment = require('moment');
 const { pool } = require('../config/db');
 const { isAuthenticated, isOperator, isSupervisor } = require('../middlewares/auth');
 const { calculateSalaryForMonth } = require('../helpers/salaryCalculator');
 
-// Configure upload for JSON files
-const storage = multer.diskStorage({
-  destination: function(req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function(req, file, cb) {
-    const newName = Date.now() + path.extname(file.originalname);
-    cb(null, newName);
-  }
-});
-const upload = multer({ storage });
+// Configure upload for JSON files in memory
+const upload = multer({ storage: multer.memoryStorage() });
 
 // GET form to upload attendance JSON
 router.get('/salary/upload', isAuthenticated, isOperator, (req, res) => {
-
-  res.redirect('/operator/departments?view=salary');
-
-  res.render('attendanceUpload', { user: req.session.user });
-
+  res.redirect('/operator/departments');
 });
 
 // POST process uploaded attendance JSON
@@ -34,20 +20,24 @@ router.post('/salary/upload', isAuthenticated, isOperator, upload.single('attFil
   const file = req.file;
   if (!file) {
     req.flash('error', 'No file uploaded');
-
-    return res.redirect('/operator/departments?view=salary');
-
+    return res.redirect('/operator/departments');
   }
+
+  const base = path.basename(file.originalname, path.extname(file.originalname));
+  const parts = base.split('_');
+  if (parts.length !== 3 || !/^[0-9]+$/.test(parts[2])) {
+    req.flash('error', 'Filename must follow departmentname_supervisorusername_supervisoruserid');
+    return res.redirect('/operator/departments');
+  }
+
   let data;
   try {
-    const jsonStr = fs.readFileSync(file.path, 'utf8');
+    const jsonStr = file.buffer.toString('utf8');
     data = JSON.parse(jsonStr);
   } catch (err) {
     console.error('Failed to parse JSON:', err);
     req.flash('error', 'Invalid JSON');
-
-    return res.redirect('/operator/departments?view=salary');
-
+    return res.redirect('/operator/departments');
   }
   const conn = await pool.getConnection();
   try {
@@ -77,12 +67,12 @@ router.post('/salary/upload', isAuthenticated, isOperator, upload.single('attFil
     conn.release();
   }
 
-  res.redirect('/operator/departments?view=salary');
+  res.redirect('/operator/departments');
 });
 
 // View salary summary for operator
 router.get('/salaries', isAuthenticated, isOperator, (req, res) => {
-  res.redirect('/operator/departments?view=salary');
+  res.redirect('/operator/departments');
 });
 
 // View salary summary for operator
