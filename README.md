@@ -102,6 +102,7 @@ CREATE TABLE employees (
   supervisor_id INT NOT NULL,
   punching_id VARCHAR(100) NOT NULL,
   name VARCHAR(100) NOT NULL,
+  designation VARCHAR(100),
   phone_number VARCHAR(20),
   salary DECIMAL(10,2) NOT NULL,
   salary_type ENUM('dihadi', 'monthly') NOT NULL,
@@ -191,6 +192,12 @@ Update the `employees` table to store each worker's allotted hours per day:
 
 ```sql
 ALTER TABLE employees ADD COLUMN allotted_hours DECIMAL(4,2) NOT NULL DEFAULT 0;
+```
+
+Add a `designation` field for each employee:
+
+```sql
+ALTER TABLE employees ADD COLUMN designation VARCHAR(100) AFTER name;
 ```
 
 Operators can upload JSON attendance files. After upload each employee's punches
