@@ -224,6 +224,8 @@ Supervisors may override this by assigning a `paid_sunday_allowance` value for a
 specifies how many Sundays in a month are paid regardless of salary; additional worked Sundays become
 leave days.
 
+If an employee is absent on the Saturday before or the Monday after a Sunday, that Sunday is treated as an unpaid absence.
+
 The salary view lists each day's hours worked along with a note explaining any deductions, so supervisors
 can easily trace why pay was reduced.
 
@@ -272,4 +274,20 @@ Uploading a sheet increases the employee's salary by `nights * (salary / days_in
 
 Operators can download an Excel template for this upload via the `/salary/night-template` route. The file includes the following columns:
 `supervisorname`, `supervisordepartment`, `punchingid`, `name`, `nights`, `month`.
+
+## Sandwich Dates
+
+Create a table so operators can mark certain dates as "sandwich" days:
+
+```sql
+CREATE TABLE sandwich_dates (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  date DATE NOT NULL,
+  UNIQUE KEY uniq_sandwich (date)
+);
+```
+
+A sandwich day is normally a paid leave. However if an employee is absent either on the day before or the day after, the sandwich day becomes unpaid and is deducted from their salary.
+
+Salaries are released 15 days after the end of the month so that any deductions for damage or misconduct can be applied before payout.
 
