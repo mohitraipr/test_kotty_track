@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Kotty Operator Dashboard – Enhanced Overview</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#0d6efd">
@@ -17,90 +17,103 @@
   <style>
     body {
       font-family: 'Poppins', sans-serif;
-      margin: 0;
-      padding-top: 70px;
       background-color: #f4f6f9;
       color: #212529;
+      padding-top: 70px;
+      transition: background-color 0.3s, color 0.3s;
     }
     .dark-mode {
       background-color: #121417;
       color: #f8f9fa;
     }
     .top-nav {
-      background: linear-gradient(90deg, #212529 0%, #2b2d30 100%);
-      border-bottom: 3px solid #141618;
       position: fixed;
       top: 0;
-      left: 0;
-      right: 0;
-      z-index: 1050;
-      padding: 0.5rem 1rem;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      width: 100%;
+      background: linear-gradient(90deg, #212529, #343a40);
+      padding: 0.75rem 1.25rem;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      z-index: 1040;
     }
     .nav-brand {
-      font-size: 1.7rem;
+      font-size: 1.5rem;
+      color: #fff;
       font-weight: 600;
-      color: #f8f9fa !important;
+      text-decoration: none;
     }
-    .nav-cards { display:flex; flex-wrap:wrap; gap:1rem; margin-bottom:1rem; }
+    .btn-outline-light i {
+      font-size: 1.2rem;
+    }
+    .nav-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
     .nav-card {
-      background:#ffffff;
-      border-radius:6px;
-      padding:1rem;
-      flex:1 0 180px;
-      text-align:center;
-      box-shadow:0 1px 3px rgba(0,0,0,0.1);
-      text-decoration:none;
-      color:inherit;
-      transition:background-color .2s ease, color .2s ease;
+      background: #fff;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      flex: 1 1 160px;
+      text-align: center;
+      color: #212529;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      text-decoration: none;
+      transition: 0.3s;
     }
     .nav-card:hover {
-      background:#0d6efd;
-      color:#fff;
+      background-color: #0d6efd;
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
-    .nav-cards { display:flex; flex-wrap:wrap; gap:1rem; }
-    .nav-card { background:#fff; border-radius:6px; padding:1rem; flex:1 0 180px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-decoration:none; color:inherit; }
-    .nav-card:hover { background:#0d6efd; color:#fff; }
-    /* Layout */
-    @media (min-width: 768px) {
-      .nav-cards { justify-content:flex-start; }
+    .nav-card i {
+      font-size: 1.8rem;
+      margin-bottom: 0.25rem;
     }
-    /* Stat boxes and panels */
+    .portal-header h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+    .portal-header p {
+      font-size: 0.95rem;
+    }
     .stat-box {
-      background: #ffffff;
-      border-radius: 8px;
-      text-align: center;
+      background: #fff;
+      border-radius: 0.75rem;
       padding: 1rem;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      margin-bottom: 1rem;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     }
     .stat-title {
-      font-size: 1rem;
       color: #6c757d;
+      font-size: 0.95rem;
     }
     .stat-value {
-      font-size: 1.6rem;
+      font-size: 1.5rem;
       font-weight: 600;
       color: #0d6efd;
     }
     .data-panel {
-      background: #ffffff;
-      border: 1px solid #ddd;
-      border-radius: 8px;
+      background: #fff;
+      border-radius: 0.75rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
       margin-bottom: 2rem;
     }
     .panel-header {
-      padding: 0.75rem 1rem;
       background: #f8f9fa;
-      border-bottom: 1px solid #ddd;
-      font-weight: 500;
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      border-bottom: 1px solid #dee2e6;
     }
     .panel-body {
       padding: 1rem;
     }
-    /* Responsive table adjustments */
     .table-responsive {
       overflow-x: auto;
+    }
+    .modal-content {
+      border-radius: 0.75rem;
     }
     /* Pendency table styling */
     .tabulator .tabulator-header {
@@ -133,60 +146,41 @@
     <div class="portal-header my-3">
       <h1>Kotty Operator Dashboard</h1>
       <p class="text-muted">Enhanced Production Overview</p>
-    </div>
+  </div>
 
-    <!-- Navigation Cards -->
-    <div class="nav-cards">
-      <a href="/operator/dashboard" class="nav-card" aria-current="page">
-        <i class="bi bi-speedometer2 fs-3" aria-hidden="true"></i>
-        <div>Dashboard</div>
-      </a>
-      <a href="/operator/editcuttinglots" class="nav-card">
-        <i class="bi bi-pencil-square fs-3" aria-hidden="true"></i>
-        <div>Edit Lots</div>
-      </a>
-      <a href="/operator/dashboard/download-all-lots" class="nav-card">
-        <i class="bi bi-cloud-arrow-down fs-3" aria-hidden="true"></i>
-        <div>Export All</div>
-      </a>
-      <a href="/search-dashboard" class="nav-card">
-        <i class="bi bi-search fs-3" aria-hidden="true"></i>
-        <div>Search</div>
-      </a>
-      <a href="/assign-to-washing" class="nav-card">
-        <i class="bi bi-arrow-right-circle fs-3" aria-hidden="true"></i>
-        <div>Washing</div>
-      </a>
-      <a href="/operator/dashboard/pic-report" class="nav-card">
-        <i class="bi bi-file-earmark-check fs-3" aria-hidden="true"></i>
-        <div>PIC Report</div>
-      </a>
-      <a href="/operator/departments" class="nav-card">
-        <i class="bi bi-wallet2 fs-3" aria-hidden="true"></i>
-        <div>Salaries</div>
-      </a>
-    </div>
+  <!-- Navigation Cards -->
+  <div class="nav-cards">
+    <a href="/operator/dashboard" class="nav-card" aria-current="page">
+      <i class="bi bi-speedometer2 fs-3" aria-hidden="true"></i>
+      <div>Dashboard</div>
+    </a>
+    <a href="/operator/editcuttinglots" class="nav-card">
+      <i class="bi bi-pencil-square fs-3" aria-hidden="true"></i>
+      <div>Edit Lots</div>
+    </a>
+    <a href="/operator/dashboard/download-all-lots" class="nav-card">
+      <i class="bi bi-cloud-arrow-down fs-3" aria-hidden="true"></i>
+      <div>Export All</div>
+    </a>
+    <a href="/search-dashboard" class="nav-card">
+      <i class="bi bi-search fs-3" aria-hidden="true"></i>
+      <div>Search</div>
+    </a>
+    <a href="/assign-to-washing" class="nav-card">
+      <i class="bi bi-arrow-right-circle fs-3" aria-hidden="true"></i>
+      <div>Washing</div>
+    </a>
+    <a href="/operator/dashboard/pic-report" class="nav-card">
+      <i class="bi bi-file-earmark-check fs-3" aria-hidden="true"></i>
+      <div>PIC Report</div>
+    </a>
+    <a href="/operator/departments" class="nav-card">
+      <i class="bi bi-wallet2 fs-3" aria-hidden="true"></i>
+      <div>Salaries</div>
+    </a>
+  </div>
 
-  <!-- Sidebar -->
-  <nav id="sidebar" class="offcanvas-md offcanvas-start show" role="navigation" aria-label="Main navigation">
-    <a href="/operator/dashboard" class="active" aria-current="page"><i class="bi bi-speedometer2" aria-hidden="true"></i> Dashboard</a>
-    <a href="/operator/editcuttinglots"><i class="bi bi-pencil-square" aria-hidden="true"></i> Edit Lots</a>
-    <a href="/operator/dashboard/download-all-lots"><i class="bi bi-cloud-arrow-down" aria-hidden="true"></i> Export All</a>
-    <a href="/search-dashboard"><i class="bi bi-search" aria-hidden="true"></i> Search</a>
-    <a href="/assign-to-washing"><i class="bi bi-arrow-right-circle" aria-hidden="true"></i> Washing</a>
-    <a href="/operator/dashboard/pic-report"><i class="bi bi-file-earmark-check" aria-hidden="true"></i> PIC Report</a>
-    <a href="/operator/departments"><i class="bi bi-wallet2" aria-hidden="true"></i> Salaries</a>
-  </nav>
-
-  <!-- Main Content Area -->
-  <main id="mainContent" class="container-fluid">
-    <div class="portal-header my-3">
-      <h1>Kotty Operator Dashboard</h1>
-      <p class="text-muted">Enhanced Production Overview</p>
-    </div>
-
-
-    <!-- Stat Cards -->
+  <!-- Stat Cards -->
     <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 mb-4">
       <div class="col"><div class="stat-box"><div class="stat-title">Total Kits</div><div class="stat-value"><%= lotCount %></div></div></div>
       <div class="col"><div class="stat-box"><div class="stat-title">Cut Pieces</div><div class="stat-value"><%= totalPiecesCut %></div></div></div>
