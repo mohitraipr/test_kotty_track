@@ -171,14 +171,19 @@ router.get('/departments/salary/download', isAuthenticated, isOperator, async (r
 
     const [rows] = await pool.query(`
       SELECT es.employee_id, es.gross, es.deduction, es.net, es.month,
-             e.name AS employee_name, e.salary AS base_salary, e.paid_sunday_allowance,
+             e.punching_id, e.name AS employee_name, e.salary AS base_salary,
+             e.paid_sunday_allowance,
              u.name AS supervisor_name, d.name AS department_name
         FROM employee_salaries es
         JOIN employees e ON es.employee_id = e.id
         JOIN users u ON e.supervisor_id = u.id
-        LEFT JOIN department_supervisors ds ON ds.user_id = u.id
+        LEFT JOIN (
+              SELECT user_id, MIN(department_id) AS department_id
+                FROM department_supervisors
+               GROUP BY user_id
+        ) ds ON ds.user_id = u.id
         LEFT JOIN departments d ON ds.department_id = d.id
-       WHERE es.month = ?
+       WHERE es.month = ? AND e.is_active = 0
        ORDER BY u.name, e.name
     `, [month]);
 
@@ -234,6 +239,7 @@ router.get('/departments/salary/download', isAuthenticated, isOperator, async (r
     sheet.columns = [
       { header: 'Supervisor', key: 'supervisor', width: 20 },
       { header: 'Department', key: 'department', width: 15 },
+      { header: 'Punching ID', key: 'punching_id', width: 15 },
       { header: 'Employee', key: 'employee', width: 20 },
       { header: 'Month', key: 'month', width: 10 },
       { header: 'Gross', key: 'gross', width: 10 },
@@ -245,6 +251,7 @@ router.get('/departments/salary/download', isAuthenticated, isOperator, async (r
       sheet.addRow({
         supervisor: r.supervisor_name,
         department: r.department_name || '',
+        punching_id: r.punching_id,
         employee: r.employee_name,
         month: r.month,
         gross: r.gross,
