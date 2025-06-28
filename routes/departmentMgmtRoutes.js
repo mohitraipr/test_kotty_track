@@ -2,10 +2,27 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/db');
 const { isAuthenticated, isOperator } = require('../middlewares/auth');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const moment = require('moment');
+const { calculateSalaryForMonth } = require('../helpers/salaryCalculator');
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    const newName = Date.now() + path.extname(file.originalname);
+    cb(null, newName);
+  }
+});
+const upload = multer({ storage });
 
 // GET /operator/departments - list departments and supervisors
 router.get('/departments', isAuthenticated, isOperator, async (req, res) => {
   try {
+    const showSalary = req.query.view === 'salary';
     const [deptRows] = await pool.query(
       `SELECT d.id, d.name,
               GROUP_CONCAT(u.username ORDER BY u.username SEPARATOR ', ') AS supervisors
@@ -24,10 +41,24 @@ router.get('/departments', isAuthenticated, isOperator, async (req, res) => {
         ORDER BY u.username`
     );
 
+    let salarySummary = [];
+    if (showSalary) {
+      const [rows] = await pool.query(`
+        SELECT u.name AS supervisor_name, u.id AS supervisor_id,
+               COUNT(e.id) AS employee_count,
+               SUM(CASE WHEN e.is_active = 1 THEN e.salary ELSE 0 END) AS total_salary
+          FROM users u
+          JOIN employees e ON e.supervisor_id = u.id
+         GROUP BY u.id`);
+      salarySummary = rows;
+    }
+
     res.render('operatorDepartments', {
       user: req.session.user,
       departments: deptRows,
-      supervisors
+      supervisors,
+      showSalarySection: showSalary,
+      salarySummary
     });
   } catch (err) {
     console.error('Error loading departments:', err);
@@ -76,6 +107,53 @@ router.post('/departments/:id/assign', isAuthenticated, isOperator, async (req, 
     req.flash('error', 'Error assigning supervisor');
     res.redirect('/operator/departments');
   }
+});
+
+// POST attendance JSON upload for salary processing
+router.post('/departments/salary/upload', isAuthenticated, isOperator, upload.single('attFile'), async (req, res) => {
+  const file = req.file;
+  if (!file) {
+    req.flash('error', 'No file uploaded');
+    return res.redirect('/operator/departments?view=salary');
+  }
+  let data;
+  try {
+    const jsonStr = fs.readFileSync(file.path, 'utf8');
+    data = JSON.parse(jsonStr);
+  } catch (err) {
+    console.error('Failed to parse JSON:', err);
+    req.flash('error', 'Invalid JSON');
+    return res.redirect('/operator/departments?view=salary');
+  }
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    for (const emp of data) {
+      const [empRows] = await conn.query('SELECT id, salary, salary_type FROM employees WHERE punching_id = ? AND name = ? LIMIT 1', [emp.punchingId, emp.name]);
+      if (!empRows.length) continue;
+      const employee = empRows[0];
+      for (const att of emp.attendance) {
+        await conn.query(
+          `INSERT INTO employee_attendance (employee_id, date, punch_in, punch_out, status)
+           VALUES (?, ?, ?, ?, ?)
+           ON DUPLICATE KEY UPDATE punch_in = VALUES(punch_in), punch_out = VALUES(punch_out), status = VALUES(status)`,
+          [employee.id, att.date, att.punchIn || null, att.punchOut || null, att.status || 'present']
+        );
+      }
+      const month = moment(data[0].attendance[0].date).format('YYYY-MM');
+      await calculateSalaryForMonth(conn, employee.id, month);
+    }
+    await conn.commit();
+    req.flash('success', 'Attendance uploaded');
+  } catch (err) {
+    await conn.rollback();
+    console.error('Error processing attendance:', err);
+    req.flash('error', 'Failed to process attendance');
+  } finally {
+    conn.release();
+  }
+
+  res.redirect('/operator/departments?view=salary');
 });
 
 module.exports = router;
