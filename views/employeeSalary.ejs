@@ -17,6 +17,14 @@
 </nav>
 <div class="container my-4">
   <%- include('partials/flashMessages') %>
+  <form method="GET" action="/employees/<%= employee.id %>/salary" class="row g-2 mb-3">
+    <div class="col-auto">
+      <input type="month" name="month" class="form-control" value="<%= month %>" required>
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn btn-primary">Go</button>
+    </div>
+  </form>
   <h5>Month: <%= month %></h5>
   <table class="table table-bordered">
     <thead>
