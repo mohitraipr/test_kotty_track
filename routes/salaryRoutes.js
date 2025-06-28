@@ -7,6 +7,7 @@ const { pool } = require('../config/db');
 const { isAuthenticated, isOperator, isSupervisor } = require('../middlewares/auth');
 const { calculateSalaryForMonth } = require('../helpers/salaryCalculator');
 const { validateAttendanceFilename } = require('../helpers/attendanceFilenameValidator');
+const XLSX = require('xlsx');
 
 // Configure upload for JSON files in memory
 const upload = multer({ storage: multer.memoryStorage() });
@@ -65,6 +66,62 @@ router.post('/salary/upload', isAuthenticated, isOperator, upload.single('attFil
     await conn.rollback();
     console.error('Error processing attendance:', err);
     req.flash('error', 'Failed to process attendance');
+  } finally {
+    conn.release();
+  }
+
+  res.redirect('/operator/departments');
+});
+
+// POST night shift Excel upload
+router.post('/salary/upload-nights', isAuthenticated, isOperator, upload.single('excelFile'), async (req, res) => {
+  const file = req.file;
+  if (!file) {
+    req.flash('error', 'No file uploaded');
+    return res.redirect('/operator/departments');
+  }
+
+  let rows;
+  try {
+    const wb = XLSX.read(file.buffer, { type: 'buffer' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+  } catch (err) {
+    console.error('Failed to parse Excel:', err);
+    req.flash('error', 'Invalid Excel file');
+    return res.redirect('/operator/departments');
+  }
+
+  const monthNow = moment().format('YYYY-MM');
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    let uploadedCount = 0;
+    for (const r of rows) {
+      const month = String(r.month || r.Month || '').trim();
+      if (month !== monthNow) continue;
+      const punchingId = String(r.punchingid || r.punchingId || r.punching_id || '').trim();
+      const name = String(r.name || r.employee_name || r.EmployeeName || '').trim();
+      const nights = parseInt(r.nights || r.Nights || r.night || 0, 10);
+      if (!punchingId || !name || !nights) continue;
+      const [empRows] = await conn.query('SELECT id, salary FROM employees WHERE punching_id = ? AND name = ? LIMIT 1', [punchingId, name]);
+      if (!empRows.length) continue;
+      const empId = empRows[0].id;
+      const [existing] = await conn.query('SELECT id FROM employee_nights WHERE employee_id = ? AND month = ? LIMIT 1', [empId, monthNow]);
+      if (existing.length) continue;
+      await conn.query(
+        'INSERT INTO employee_nights (employee_id, supervisor_name, supervisor_department, punching_id, employee_name, nights, month) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [empId, r.supervisorname || r.supervisor_name || '', r.supervisordepartment || r.department || '', punchingId, name, nights, monthNow]
+      );
+      await calculateSalaryForMonth(conn, empId, monthNow);
+      uploadedCount++;
+    }
+    await conn.commit();
+    req.flash('success', `Night data uploaded for ${uploadedCount} employees`);
+  } catch (err) {
+    await conn.rollback();
+    console.error('Error processing night data:', err);
+    req.flash('error', 'Failed to process night data');
   } finally {
     conn.release();
   }
