@@ -211,3 +211,25 @@ which also lists each supervisor with their active employee count and total
 A summary page lists each supervisor with their active employee count and total
 
 monthly salary.
+
+## Attendance Edit Logs
+
+Allow operators to adjust an employee's punch in/out times. Create a log table to track these updates and limit each employee to three edits total.
+
+```sql
+CREATE TABLE attendance_edit_logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  employee_id INT NOT NULL,
+  attendance_date DATE NOT NULL,
+  old_punch_in TIME,
+  old_punch_out TIME,
+  new_punch_in TIME,
+  new_punch_out TIME,
+  operator_id INT NOT NULL,
+  edited_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (employee_id) REFERENCES employees(id),
+  FOREIGN KEY (operator_id) REFERENCES users(id)
+);
+```
+
+Operators can modify punch times from the dashboard, but once three rows exist in `attendance_edit_logs` for a given employee no further edits are allowed. Every update also recalculates the employee's salary for that month.

@@ -80,6 +80,7 @@ const inventoryRoutes = require('./routes/inventoryRoutes');
 const departmentMgmtRoutes = require('./routes/departmentMgmtRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
 const salaryRoutes = require('./routes/salaryRoutes');
+const operatorEmployeeRoutes = require('./routes/operatorEmployeeRoutes');
 
 // Use Routes
 app.use('/', authRoutes);
@@ -97,6 +98,7 @@ app.use('/assign-to-washing', assigntowashingRoutes);
 app.use('/jeansassemblydashboard', jeansAssemblyRoutes);
 app.use("/operator", editCuttingLotRoutes);
 app.use('/operator', departmentMgmtRoutes);
+app.use('/operator', operatorEmployeeRoutes);
 app.use('/', bulkUploadRoutes);
 app.use('/washingin', washingIN);
 app.use('/catalogupload', catalogR);
