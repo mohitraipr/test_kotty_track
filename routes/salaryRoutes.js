@@ -118,7 +118,6 @@ router.post('/salary/upload-nights', isAuthenticated, isOperator, upload.single(
       );
       const lastMonth = lastAtt.last_month; // month of most recent attendance
       if (!lastMonth || month !== lastMonth) continue;
-      const [existing] = await conn.query('SELECT id FROM employee_nights WHERE employee_id = ? AND month = ? LIMIT 1', [empId, lastMonth]);
       if (existing.length) continue;
       await conn.query(
         'INSERT INTO employee_nights (employee_id, supervisor_name, supervisor_department, punching_id, employee_name, nights, month) VALUES (?, ?, ?, ?, ?, ?, ?)',
