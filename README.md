@@ -248,3 +248,24 @@ CREATE TABLE attendance_edit_logs (
 ```
 
 Operators can modify punch times from the dashboard, but once three rows exist in `attendance_edit_logs` for a given employee no further edits are allowed. Every update also recalculates the employee's salary for that month.
+## Night Shift Uploads
+
+Operators can upload a monthly Excel sheet listing the night shifts worked by employees. Create a table to store these uploads:
+
+```sql
+CREATE TABLE employee_nights (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  employee_id INT NOT NULL,
+  supervisor_name VARCHAR(100) NOT NULL,
+  supervisor_department VARCHAR(100) NOT NULL,
+  punching_id VARCHAR(100) NOT NULL,
+  employee_name VARCHAR(100) NOT NULL,
+  nights INT NOT NULL,
+  month CHAR(7) NOT NULL,
+  UNIQUE KEY uniq_night (employee_id, month),
+  FOREIGN KEY (employee_id) REFERENCES employees(id)
+);
+```
+
+Uploading a sheet increases the employee's salary by `nights * (salary / days_in_month)` for the current month. Duplicate uploads for the same employee and month are ignored.
+

@@ -27,6 +27,13 @@ async function calculateSalaryForMonth(conn, employeeId, month) {
       if (a.status === 'absent' || a.status === 'one punch only') absent++;
     }
   });
+
+  const [nightRows] = await conn.query(
+    'SELECT COALESCE(SUM(nights),0) AS total_nights FROM employee_nights WHERE employee_id = ? AND month = ?',
+    [employeeId, month]
+  );
+  const nightPay = (parseFloat(nightRows[0].total_nights) || 0) * dailyRate;
+  extraPay += nightPay;
   const gross = parseFloat(emp.salary) + extraPay;
   const deduction = absent * dailyRate;
   const net = gross - deduction;
