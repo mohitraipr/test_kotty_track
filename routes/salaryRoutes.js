@@ -10,6 +10,7 @@ const { validateAttendanceFilename } = require('../helpers/attendanceFilenameVal
 const XLSX = require('xlsx');
 const ExcelJS = require('exceljs');
 
+
 // Configure upload for JSON files in memory
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -93,12 +94,17 @@ router.post('/salary/upload-nights', isAuthenticated, isOperator, upload.single(
     return res.redirect('/operator/departments');
   }
 
+
+  const monthNow = moment().format('YYYY-MM');
+
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
     let uploadedCount = 0;
     for (const r of rows) {
       const month = String(r.month || r.Month || '').trim();
+      if (month !== monthNow) continue;
+
       const punchingId = String(r.punchingid || r.punchingId || r.punching_id || '').trim();
       const name = String(r.name || r.employee_name || r.EmployeeName || '').trim();
       const nights = parseInt(r.nights || r.Nights || r.night || 0, 10);
@@ -119,6 +125,15 @@ router.post('/salary/upload-nights', isAuthenticated, isOperator, upload.single(
         [empId, r.supervisorname || r.supervisor_name || '', r.supervisordepartment || r.department || '', punchingId, name, nights, lastMonth]
       );
       await calculateSalaryForMonth(conn, empId, lastMonth);
+
+      const [existing] = await conn.query('SELECT id FROM employee_nights WHERE employee_id = ? AND month = ? LIMIT 1', [empId, monthNow]);
+      if (existing.length) continue;
+      await conn.query(
+        'INSERT INTO employee_nights (employee_id, supervisor_name, supervisor_department, punching_id, employee_name, nights, month) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [empId, r.supervisorname || r.supervisor_name || '', r.supervisordepartment || r.department || '', punchingId, name, nights, monthNow]
+      );
+      await calculateSalaryForMonth(conn, empId, monthNow);
+
       uploadedCount++;
     }
     await conn.commit();
@@ -133,6 +148,7 @@ router.post('/salary/upload-nights', isAuthenticated, isOperator, upload.single(
 
   res.redirect('/operator/departments');
 });
+
 
 // GET night shift Excel template
 router.get('/salary/night-template', isAuthenticated, isOperator, async (req, res) => {
@@ -157,6 +173,7 @@ router.get('/salary/night-template', isAuthenticated, isOperator, async (req, re
     return res.redirect('/operator/departments');
   }
 });
+
 
 // View salary summary for operator
 router.get('/salaries', isAuthenticated, isOperator, (req, res) => {
