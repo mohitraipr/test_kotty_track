@@ -7,6 +7,8 @@ const { pool } = require('../config/db');
 const { isAuthenticated, isOperator, isSupervisor } = require('../middlewares/auth');
 const { calculateSalaryForMonth } = require('../helpers/salaryCalculator');
 const { validateAttendanceFilename } = require('../helpers/attendanceFilenameValidator');
+const XLSX = require('xlsx');
+const ExcelJS = require('exceljs');
 
 // Configure upload for JSON files in memory
 const upload = multer({ storage: multer.memoryStorage() });
@@ -70,6 +72,90 @@ router.post('/salary/upload', isAuthenticated, isOperator, upload.single('attFil
   }
 
   res.redirect('/operator/departments');
+});
+
+// POST night shift Excel upload
+router.post('/salary/upload-nights', isAuthenticated, isOperator, upload.single('excelFile'), async (req, res) => {
+  const file = req.file;
+  if (!file) {
+    req.flash('error', 'No file uploaded');
+    return res.redirect('/operator/departments');
+  }
+
+  let rows;
+  try {
+    const wb = XLSX.read(file.buffer, { type: 'buffer' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+  } catch (err) {
+    console.error('Failed to parse Excel:', err);
+    req.flash('error', 'Invalid Excel file');
+    return res.redirect('/operator/departments');
+  }
+
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    let uploadedCount = 0;
+    for (const r of rows) {
+      const month = String(r.month || r.Month || '').trim();
+      const punchingId = String(r.punchingid || r.punchingId || r.punching_id || '').trim();
+      const name = String(r.name || r.employee_name || r.EmployeeName || '').trim();
+      const nights = parseInt(r.nights || r.Nights || r.night || 0, 10);
+      if (!punchingId || !name || !nights) continue;
+      const [empRows] = await conn.query('SELECT id, salary FROM employees WHERE punching_id = ? AND name = ? LIMIT 1', [punchingId, name]);
+      if (!empRows.length) continue;
+      const empId = empRows[0].id;
+      const [[lastAtt]] = await conn.query(
+        'SELECT DATE_FORMAT(MAX(date), "%Y-%m") AS last_month FROM employee_attendance WHERE employee_id = ?',
+        [empId]
+      );
+      const lastMonth = lastAtt.last_month; // month of most recent attendance
+      if (!lastMonth || month !== lastMonth) continue;
+      const [existing] = await conn.query('SELECT id FROM employee_nights WHERE employee_id = ? AND month = ? LIMIT 1', [empId, lastMonth]);
+      if (existing.length) continue;
+      await conn.query(
+        'INSERT INTO employee_nights (employee_id, supervisor_name, supervisor_department, punching_id, employee_name, nights, month) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [empId, r.supervisorname || r.supervisor_name || '', r.supervisordepartment || r.department || '', punchingId, name, nights, lastMonth]
+      );
+      await calculateSalaryForMonth(conn, empId, lastMonth);
+      uploadedCount++;
+    }
+    await conn.commit();
+    req.flash('success', `Night data uploaded for ${uploadedCount} employees`);
+  } catch (err) {
+    await conn.rollback();
+    console.error('Error processing night data:', err);
+    req.flash('error', 'Failed to process night data');
+  } finally {
+    conn.release();
+  }
+
+  res.redirect('/operator/departments');
+});
+
+// GET night shift Excel template
+router.get('/salary/night-template', isAuthenticated, isOperator, async (req, res) => {
+  try {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('NightTemplate');
+    sheet.columns = [
+      { header: 'supervisorname', key: 'supervisorname', width: 20 },
+      { header: 'supervisordepartment', key: 'supervisordepartment', width: 20 },
+      { header: 'punchingid', key: 'punchingid', width: 15 },
+      { header: 'name', key: 'name', width: 20 },
+      { header: 'nights', key: 'nights', width: 10 },
+      { header: 'month', key: 'month', width: 12 }
+    ];
+    res.setHeader('Content-Disposition', 'attachment; filename="NightShiftTemplate.xlsx"');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    await workbook.xlsx.write(res);
+    return res.end();
+  } catch (err) {
+    console.error('Error downloading night template:', err);
+    req.flash('error', 'Error downloading night template');
+    return res.redirect('/operator/departments');
+  }
 });
 
 // View salary summary for operator
