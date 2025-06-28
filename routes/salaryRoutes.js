@@ -95,7 +95,8 @@ router.post('/salary/upload-nights', isAuthenticated, isOperator, upload.single(
   }
 
 
-  const monthNow = moment().format('YYYY-MM');
+  // Night records can be uploaded for any month as long as the employee
+  // already has attendance entries recorded for that month.
 
   const conn = await pool.getConnection();
   try {
@@ -103,7 +104,7 @@ router.post('/salary/upload-nights', isAuthenticated, isOperator, upload.single(
     let uploadedCount = 0;
     for (const r of rows) {
       const month = String(r.month || r.Month || '').trim();
-      if (month !== monthNow) continue;
+      if (!month) continue;
 
       const punchingId = String(r.punchingid || r.punchingId || r.punching_id || '').trim();
       const name = String(r.name || r.employee_name || r.EmployeeName || '').trim();
@@ -112,26 +113,31 @@ router.post('/salary/upload-nights', isAuthenticated, isOperator, upload.single(
       const [empRows] = await conn.query('SELECT id, salary FROM employees WHERE punching_id = ? AND name = ? LIMIT 1', [punchingId, name]);
       if (!empRows.length) continue;
       const empId = empRows[0].id;
-      const [[lastAtt]] = await conn.query(
-        'SELECT DATE_FORMAT(MAX(date), "%Y-%m") AS last_month FROM employee_attendance WHERE employee_id = ?',
-        [empId]
+      const [[attMonth]] = await conn.query(
+        'SELECT 1 FROM employee_attendance WHERE employee_id = ? AND DATE_FORMAT(date, "%Y-%m") = ? LIMIT 1',
+        [empId, month]
       );
-      const lastMonth = lastAtt.last_month; // month of most recent attendance
-      if (!lastMonth || month !== lastMonth) continue;
-      if (existing.length) continue;
-      await conn.query(
-        'INSERT INTO employee_nights (employee_id, supervisor_name, supervisor_department, punching_id, employee_name, nights, month) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [empId, r.supervisorname || r.supervisor_name || '', r.supervisordepartment || r.department || '', punchingId, name, nights, lastMonth]
-      );
-      await calculateSalaryForMonth(conn, empId, lastMonth);
+      if (!attMonth) continue;
 
-      const [existing] = await conn.query('SELECT id FROM employee_nights WHERE employee_id = ? AND month = ? LIMIT 1', [empId, monthNow]);
+      const [existing] = await conn.query(
+        'SELECT id FROM employee_nights WHERE employee_id = ? AND month = ? LIMIT 1',
+        [empId, month]
+      );
       if (existing.length) continue;
+
       await conn.query(
         'INSERT INTO employee_nights (employee_id, supervisor_name, supervisor_department, punching_id, employee_name, nights, month) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [empId, r.supervisorname || r.supervisor_name || '', r.supervisordepartment || r.department || '', punchingId, name, nights, monthNow]
+        [
+          empId,
+          r.supervisorname || r.supervisor_name || '',
+          r.supervisordepartment || r.department || '',
+          punchingId,
+          name,
+          nights,
+          month
+        ]
       );
-      await calculateSalaryForMonth(conn, empId, monthNow);
+      await calculateSalaryForMonth(conn, empId, month);
 
       uploadedCount++;
     }
@@ -173,11 +179,6 @@ router.get('/salary/night-template', isAuthenticated, isOperator, async (req, re
   }
 });
 
-
-// View salary summary for operator
-router.get('/salaries', isAuthenticated, isOperator, (req, res) => {
-  res.redirect('/operator/departments');
-});
 
 // View salary summary for operator
 router.get('/salaries', isAuthenticated, isOperator, async (req, res) => {

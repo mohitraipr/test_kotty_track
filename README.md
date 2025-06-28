@@ -267,9 +267,7 @@ CREATE TABLE employee_nights (
 );
 ```
 
-Uploading a sheet increases the employee's salary by `nights * (salary / days_in_month)` for the month matching the employee's most recent attendance upload. Each row must specify a `month` value that matches the latest attendance month recorded for that employee. Duplicate uploads for the same employee and month are ignored.
-
-Uploading a sheet increases the employee's salary by `nights * (salary / days_in_month)` for the current month. Duplicate uploads for the same employee and month are ignored.
+Uploading a sheet increases the employee's salary by `nights * (salary / days_in_month)` for whichever month is provided, as long as the employee already has attendance recorded for that month. Duplicate uploads for the same employee and month are ignored.
 
 
 Operators can download an Excel template for this upload via the `/salary/night-template` route. The file includes the following columns:
