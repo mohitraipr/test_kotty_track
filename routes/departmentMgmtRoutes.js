@@ -6,6 +6,7 @@ const multer = require('multer');
 const path = require('path');
 const moment = require('moment');
 const { calculateSalaryForMonth } = require('../helpers/salaryCalculator');
+const { validateAttendanceFilename } = require('../helpers/attendanceFilenameValidator');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -107,10 +108,9 @@ router.post('/departments/salary/upload', isAuthenticated, isOperator, upload.si
     return res.redirect('/operator/departments');
   }
 
-  const base = path.basename(file.originalname, path.extname(file.originalname));
-  const parts = base.split('_');
-  if (parts.length !== 3 || !/^[0-9]+$/.test(parts[2])) {
-    req.flash('error', 'Filename must follow departmentname_supervisorusername_supervisoruserid');
+  const validation = await validateAttendanceFilename(file.originalname);
+  if (!validation.valid) {
+    req.flash('error', validation.message);
     return res.redirect('/operator/departments');
   }
 

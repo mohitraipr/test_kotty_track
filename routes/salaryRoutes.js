@@ -6,6 +6,7 @@ const moment = require('moment');
 const { pool } = require('../config/db');
 const { isAuthenticated, isOperator, isSupervisor } = require('../middlewares/auth');
 const { calculateSalaryForMonth } = require('../helpers/salaryCalculator');
+const { validateAttendanceFilename } = require('../helpers/attendanceFilenameValidator');
 
 // Configure upload for JSON files in memory
 const upload = multer({ storage: multer.memoryStorage() });
@@ -23,10 +24,9 @@ router.post('/salary/upload', isAuthenticated, isOperator, upload.single('attFil
     return res.redirect('/operator/departments');
   }
 
-  const base = path.basename(file.originalname, path.extname(file.originalname));
-  const parts = base.split('_');
-  if (parts.length !== 3 || !/^[0-9]+$/.test(parts[2])) {
-    req.flash('error', 'Filename must follow departmentname_supervisorusername_supervisoruserid');
+  const validation = await validateAttendanceFilename(file.originalname);
+  if (!validation.valid) {
+    req.flash('error', validation.message);
     return res.redirect('/operator/departments');
   }
 
