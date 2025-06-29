@@ -25,6 +25,7 @@ function lunchDeduction(punchIn, punchOut) {
 }
 exports.lunchDeduction = lunchDeduction;
 
+
 async function calculateSalaryForMonth(conn, employeeId, month) {
   const [[emp]] = await conn.query(
     'SELECT salary, salary_type, paid_sunday_allowance, allotted_hours FROM employees WHERE id = ?',
