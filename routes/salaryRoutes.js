@@ -40,6 +40,7 @@ router.post('/salary/upload', isAuthenticated, isOperator, upload.single('attFil
     req.flash('error', validation.message);
     return res.redirect('/operator/departments');
   }
+  const supervisorId = validation.supervisorId;
 
   let data;
   try {
@@ -55,7 +56,10 @@ router.post('/salary/upload', isAuthenticated, isOperator, upload.single('attFil
     await conn.beginTransaction();
     let uploadedCount = 0;
     for (const emp of data) {
-      const [empRows] = await conn.query('SELECT id, salary, salary_type FROM employees WHERE punching_id = ? AND name = ? LIMIT 1', [emp.punchingId, emp.name]);
+      const [empRows] = await conn.query(
+        'SELECT id, salary, salary_type FROM employees WHERE punching_id = ? AND name = ? AND supervisor_id = ? LIMIT 1',
+        [emp.punchingId, emp.name, supervisorId]
+      );
       if (!empRows.length) continue;
       const employee = empRows[0];
       for (const att of emp.attendance) {
@@ -116,9 +120,22 @@ router.post('/salary/upload-nights', isAuthenticated, isOperator, upload.single(
 
       const punchingId = String(r.punchingid || r.punchingId || r.punching_id || '').trim();
       const name = String(r.name || r.employee_name || r.EmployeeName || '').trim();
+      const supName = String(r.supervisorname || r.supervisor_name || '').trim();
       const nights = parseInt(r.nights || r.Nights || r.night || 0, 10);
       if (!punchingId || !name || !nights) continue;
-      const [empRows] = await conn.query('SELECT id, salary FROM employees WHERE punching_id = ? AND name = ? LIMIT 1', [punchingId, name]);
+      let supervisorCondition = '';
+      const params = [punchingId, name];
+      if (supName) {
+        const [[sup]] = await conn.query('SELECT id FROM users WHERE name = ? LIMIT 1', [supName]);
+        if (sup) {
+          supervisorCondition = ' AND supervisor_id = ?';
+          params.push(sup.id);
+        }
+      }
+      const [empRows] = await conn.query(
+        `SELECT id, salary FROM employees WHERE punching_id = ? AND name = ?${supervisorCondition} LIMIT 1`,
+        params
+      );
       if (!empRows.length) continue;
       const empId = empRows[0].id;
       const [[attMonth]] = await conn.query(

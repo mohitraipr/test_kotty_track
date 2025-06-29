@@ -116,6 +116,7 @@ router.post('/departments/salary/upload', isAuthenticated, isOperator, upload.si
     req.flash('error', validation.message);
     return res.redirect('/operator/departments');
   }
+  const supervisorId = validation.supervisorId;
 
   let data;
   try {
@@ -131,7 +132,10 @@ router.post('/departments/salary/upload', isAuthenticated, isOperator, upload.si
     await conn.beginTransaction();
     let uploadedCount = 0;
     for (const emp of data) {
-      const [empRows] = await conn.query('SELECT id, salary, salary_type FROM employees WHERE punching_id = ? AND name = ? LIMIT 1', [emp.punchingId, emp.name]);
+      const [empRows] = await conn.query(
+        'SELECT id, salary, salary_type FROM employees WHERE punching_id = ? AND name = ? AND supervisor_id = ? LIMIT 1',
+        [emp.punchingId, emp.name, supervisorId]
+      );
       if (!empRows.length) continue;
       const employee = empRows[0];
       for (const att of emp.attendance) {
