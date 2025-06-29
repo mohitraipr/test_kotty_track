@@ -13,6 +13,7 @@ function effectiveHours(punchIn, punchOut) {
   if (hours < 0) hours = 0;
   return hours;
 }
+exports.effectiveHours = effectiveHours;
 
 async function calculateSalaryForMonth(conn, employeeId, month) {
   const [[emp]] = await conn.query(
@@ -123,4 +124,4 @@ async function calculateDihadiMonthly(conn, employeeId, month, emp) {
   );
 }
 
-module.exports = { calculateSalaryForMonth, effectiveHours };
+exports.calculateSalaryForMonth = calculateSalaryForMonth;
