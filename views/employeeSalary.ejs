@@ -55,6 +55,9 @@
       <% }) %>
     </tbody>
   </table>
+  <% if (employee.salary_type === 'dihadi') { %>
+    <h6>Total Hours: <%= totalHours %> | Hourly Pay: <%= hourlyRate.toFixed(2) %></h6>
+  <% } %>
   <% if (salary) { %>
     <h6>Gross: <%= salary.gross %> | Deduction: <%= salary.deduction %> | Net: <%= salary.net %></h6>
   <% } else { %>

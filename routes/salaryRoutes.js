@@ -214,9 +214,22 @@ router.get('/employees/:id/salary', isAuthenticated, isSupervisor, async (req, r
     const [attendance] = await pool.query('SELECT * FROM employee_attendance WHERE employee_id = ? AND date BETWEEN ? AND ? ORDER BY date', [empId, startDate, endDate]);
     const daysInMonth = moment(month + '-01').daysInMonth();
     const dailyRate = parseFloat(emp.salary) / daysInMonth;
+    let totalHours = 0;
+    let hourlyRate = 0;
+    if (emp.salary_type === 'dihadi') {
+      hourlyRate = emp.allotted_hours
+        ? parseFloat(emp.salary) / parseFloat(emp.allotted_hours)
+        : 0;
+    }
     let paidUsed = 0;
     attendance.forEach(a => {
       if (a.punch_in && a.punch_out) {
+
+        const hrs = parseFloat(effectiveHours(a.punch_in, a.punch_out).toFixed(2));
+        a.hours = hrs;
+        if (emp.salary_type === 'dihadi') {
+          totalHours += hrs;
+        }
         a.hours = parseFloat(effectiveHours(a.punch_in, a.punch_out).toFixed(2));
       } else {
         a.hours = 0;
@@ -245,8 +258,11 @@ router.get('/employees/:id/salary', isAuthenticated, isSupervisor, async (req, r
         }
       }
     });
+    if (emp.salary_type === 'dihadi') {
+      totalHours = parseFloat(totalHours.toFixed(2));
+    }
     const [[salary]] = await pool.query('SELECT * FROM employee_salaries WHERE employee_id = ? AND month = ? LIMIT 1', [empId, month]);
-    res.render('employeeSalary', { user: req.session.user, employee: emp, attendance, salary, month, dailyRate });
+    res.render('employeeSalary', { user: req.session.user, employee: emp, attendance, salary, month, dailyRate, totalHours, hourlyRate });
   } catch (err) {
     console.error('Error loading salary view:', err);
     req.flash('error', 'Failed to load salary');
