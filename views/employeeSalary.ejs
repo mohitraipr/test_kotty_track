@@ -39,6 +39,9 @@
         <th>Punch In</th>
         <th>Punch Out</th>
         <th>Hours</th>
+        <% if (employee.salary_type === 'dihadi') { %>
+          <th>Lunch Deduction</th>
+        <% } %>
         <th>Deduction Reason</th>
       </tr>
     </thead>
@@ -50,6 +53,9 @@
           <td><%= a.punch_in || '' %></td>
           <td><%= a.punch_out || '' %></td>
           <td><%= a.hours %></td>
+          <% if (employee.salary_type === 'dihadi') { %>
+            <td><%= a.lunch_deduction %></td>
+          <% } %>
           <td><%= a.deduction_reason %></td>
         </tr>
       <% }) %>

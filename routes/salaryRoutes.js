@@ -5,7 +5,7 @@ const path = require('path');
 const moment = require('moment');
 const { pool } = require('../config/db');
 const { isAuthenticated, isOperator, isSupervisor } = require('../middlewares/auth');
-const { calculateSalaryForMonth, effectiveHours } = require('../helpers/salaryCalculator');
+const { calculateSalaryForMonth, effectiveHours, lunchDeduction } = require('../helpers/salaryCalculator');
 const { validateAttendanceFilename } = require('../helpers/attendanceFilenameValidator');
 const XLSX = require('xlsx');
 const ExcelJS = require('exceljs');
@@ -224,15 +224,16 @@ router.get('/employees/:id/salary', isAuthenticated, isSupervisor, async (req, r
     let paidUsed = 0;
     attendance.forEach(a => {
       if (a.punch_in && a.punch_out) {
-
         const hrs = parseFloat(effectiveHours(a.punch_in, a.punch_out).toFixed(2));
+        const ld = parseFloat(lunchDeduction(a.punch_in, a.punch_out).toFixed(2));
         a.hours = hrs;
+        a.lunch_deduction = ld;
         if (emp.salary_type === 'dihadi') {
           totalHours += hrs;
         }
-        a.hours = parseFloat(effectiveHours(a.punch_in, a.punch_out).toFixed(2));
       } else {
         a.hours = 0;
+        a.lunch_deduction = 0;
       }
       const isSun = moment(a.date).day() === 0;
       if (isSun) {
