@@ -5,7 +5,7 @@ const path = require('path');
 const moment = require('moment');
 const { pool } = require('../config/db');
 const { isAuthenticated, isOperator, isSupervisor } = require('../middlewares/auth');
-const { calculateSalaryForMonth } = require('../helpers/salaryCalculator');
+const { calculateSalaryForMonth, effectiveHours } = require('../helpers/salaryCalculator');
 const { validateAttendanceFilename } = require('../helpers/attendanceFilenameValidator');
 const XLSX = require('xlsx');
 const ExcelJS = require('exceljs');
@@ -209,15 +209,26 @@ router.get('/employees/:id/salary', isAuthenticated, isSupervisor, async (req, r
       req.flash('error', 'Employee not found');
       return res.redirect('/supervisor/employees');
     }
-    const [attendance] = await pool.query('SELECT * FROM employee_attendance WHERE employee_id = ? AND DATE_FORMAT(date, "%Y-%m") = ? ORDER BY date', [empId, month]);
+    const startDate = moment(month + '-01').format('YYYY-MM-DD');
+    const endDate = moment(month + '-15').format('YYYY-MM-DD');
+    const [attendance] = await pool.query('SELECT * FROM employee_attendance WHERE employee_id = ? AND date BETWEEN ? AND ? ORDER BY date', [empId, startDate, endDate]);
     const daysInMonth = moment(month + '-01').daysInMonth();
     const dailyRate = parseFloat(emp.salary) / daysInMonth;
+    let totalHours = 0;
+    let hourlyRate = 0;
+    if (emp.salary_type === 'dihadi') {
+      hourlyRate = emp.allotted_hours
+        ? parseFloat(emp.salary) / parseFloat(emp.allotted_hours)
+        : 0;
+    }
     let paidUsed = 0;
     attendance.forEach(a => {
       if (a.punch_in && a.punch_out) {
-        const start = moment(a.punch_in, 'HH:mm:ss');
-        const end = moment(a.punch_out, 'HH:mm:ss');
-        a.hours = parseFloat((end.diff(start, 'minutes') / 60).toFixed(2));
+        const hrs = parseFloat(effectiveHours(a.punch_in, a.punch_out).toFixed(2));
+        a.hours = hrs;
+        if (emp.salary_type === 'dihadi') {
+          totalHours += hrs;
+        }
       } else {
         a.hours = 0;
       }
@@ -245,8 +256,11 @@ router.get('/employees/:id/salary', isAuthenticated, isSupervisor, async (req, r
         }
       }
     });
+    if (emp.salary_type === 'dihadi') {
+      totalHours = parseFloat(totalHours.toFixed(2));
+    }
     const [[salary]] = await pool.query('SELECT * FROM employee_salaries WHERE employee_id = ? AND month = ? LIMIT 1', [empId, month]);
-    res.render('employeeSalary', { user: req.session.user, employee: emp, attendance, salary, month, dailyRate });
+    res.render('employeeSalary', { user: req.session.user, employee: emp, attendance, salary, month, dailyRate, totalHours, hourlyRate });
   } catch (err) {
     console.error('Error loading salary view:', err);
     req.flash('error', 'Failed to load salary');

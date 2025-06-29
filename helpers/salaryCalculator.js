@@ -1,5 +1,19 @@
 const moment = require('moment');
 
+function effectiveHours(punchIn, punchOut) {
+  const start = moment(punchIn, 'HH:mm:ss');
+  const end = moment(punchOut, 'HH:mm:ss');
+  let hours = end.diff(start, 'minutes') / 60;
+  const mins = hours * 60;
+  if (mins >= 11 * 60 + 50) {
+    hours -= 50 / 60;
+  } else if (mins > 5 * 60 + 10) {
+    hours -= 0.5;
+  }
+  if (hours < 0) hours = 0;
+  return hours;
+}
+
 async function calculateSalaryForMonth(conn, employeeId, month) {
   const [[emp]] = await conn.query(
     'SELECT salary, salary_type, paid_sunday_allowance, allotted_hours FROM employees WHERE id = ?',
@@ -90,25 +104,17 @@ async function calculateSalaryForMonth(conn, employeeId, month) {
 }
 
 async function calculateDihadiMonthly(conn, employeeId, month, emp) {
+  const startDate = moment(month + '-01').format('YYYY-MM-DD');
+  const endDate = moment(month + '-15').format('YYYY-MM-DD');
   const [attendance] = await conn.query(
-    "SELECT date, punch_in, punch_out FROM employee_attendance WHERE employee_id = ? AND DATE_FORMAT(date, '%Y-%m') = ?",
-    [employeeId, month]
+    "SELECT date, punch_in, punch_out FROM employee_attendance WHERE employee_id = ? AND date BETWEEN ? AND ?",
+    [employeeId, startDate, endDate]
   );
   const hourlyRate = emp.allotted_hours ? parseFloat(emp.salary) / parseFloat(emp.allotted_hours) : 0;
   let totalHours = 0;
   for (const a of attendance) {
     if (!a.punch_in || !a.punch_out) continue;
-    const start = moment(a.punch_in, 'HH:mm:ss');
-    const end = moment(a.punch_out, 'HH:mm:ss');
-    let hours = end.diff(start, 'minutes') / 60;
-    const mins = hours * 60;
-    if (mins >= 11 * 60 + 50) {
-      hours -= 50 / 60;
-    } else if (mins > 5 * 60 + 10) {
-      hours -= 0.5;
-    }
-    if (hours < 0) hours = 0;
-    totalHours += hours;
+    totalHours += effectiveHours(a.punch_in, a.punch_out);
   }
   const gross = parseFloat((totalHours * hourlyRate).toFixed(2));
   await conn.query(
@@ -117,4 +123,4 @@ async function calculateDihadiMonthly(conn, employeeId, month, emp) {
   );
 }
 
-module.exports = { calculateSalaryForMonth };
+module.exports = { calculateSalaryForMonth, effectiveHours };
