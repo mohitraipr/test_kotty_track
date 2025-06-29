@@ -11,7 +11,7 @@ function formatHours(h) {
   let hours = Math.floor(h);
   let mins = Math.round((h - hours) * 60);
   if (mins === 60) { hours += 1; mins = 0; }
-  return `${hours}.${String(mins).padStart(2, '0')}`;
+  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
 }
 
 const { validateAttendanceFilename } = require('../helpers/attendanceFilenameValidator');
@@ -233,24 +233,13 @@ router.get('/employees/:id/salary', isAuthenticated, isSupervisor, async (req, r
     attendance.forEach(a => {
       if (a.punch_in && a.punch_out) {
         const hrsDec = effectiveHours(a.punch_in, a.punch_out);
-        const ldMin = lunchDeduction(a.punch_in, a.punch_out);
         a.hours = formatHours(hrsDec);
-        a.lunch_deduction = ldMin;
-
-        const hrs = parseFloat(effectiveHours(a.punch_in, a.punch_out).toFixed(2));
-        const ld = parseFloat(lunchDeduction(a.punch_in, a.punch_out).toFixed(2));
-        a.hours = hrs;
-        a.lunch_deduction = ld;
-
+        a.lunch_deduction = lunchDeduction(a.punch_in, a.punch_out);
         if (emp.salary_type === 'dihadi') {
           totalHours += hrsDec;
         }
       } else {
-
-        a.hours = '0.00';
-
-        a.hours = 0;
-
+        a.hours = '00:00';
         a.lunch_deduction = 0;
       }
       const isSun = moment(a.date).day() === 0;

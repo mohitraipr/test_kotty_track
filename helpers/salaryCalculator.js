@@ -1,11 +1,11 @@
 const moment = require('moment');
 
 function lunchDeduction(punchIn, punchOut) {
-  const start = moment(punchIn, 'HH:mm:ss');
-  const end = moment(punchOut, 'HH:mm:ss');
-  const mins = end.diff(start, 'minutes');
-  if (mins <= 5 * 60) return 0;
-  if (mins <= 9 * 60 + 30) return 30;
+  const out = moment(punchOut, 'HH:mm:ss');
+  const firstCut = moment('13:10:00', 'HH:mm:ss');
+  const secondCut = moment('18:10:00', 'HH:mm:ss');
+  if (out.isSameOrBefore(firstCut)) return 0;
+  if (out.isSameOrBefore(secondCut)) return 30;
   return 60;
 }
 exports.lunchDeduction = lunchDeduction;
@@ -20,17 +20,6 @@ function effectiveHours(punchIn, punchOut) {
   return mins / 60;
 }
 exports.effectiveHours = effectiveHours;
-
-
-function lunchDeduction(punchIn, punchOut) {
-  const start = moment(punchIn, 'HH:mm:ss');
-  const end = moment(punchOut, 'HH:mm:ss');
-  const mins = end.diff(start, 'minutes');
-  if (mins >= 11 * 60 + 50) return 50 / 60;
-  if (mins > 5 * 60 + 10) return 0.5;
-  return 0;
-}
-exports.lunchDeduction = lunchDeduction;
 
 
 
