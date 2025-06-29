@@ -24,7 +24,7 @@ async function validateAttendanceFilename(filename) {
     if (!dsRows.length) {
       return { valid: false, message: 'Supervisor not assigned to department' };
     }
-    return { valid: true };
+    return { valid: true, departmentId: dept.id, supervisorId };
   } catch (err) {
     console.error('Filename validation error:', err);
     return { valid: false, message: 'Error validating filename' };

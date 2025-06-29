@@ -109,9 +109,12 @@ CREATE TABLE employees (
   paid_sunday_allowance INT NOT NULL DEFAULT 0,
   date_of_joining DATE NOT NULL,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  UNIQUE KEY uniq_supervisor_punch (supervisor_id, punching_id),
   FOREIGN KEY (supervisor_id) REFERENCES users(id)
 );
 ```
+
+Each supervisor must assign unique punching IDs to their employees. This ensures attendance uploads do not accidentally match workers from other departments.
 
 Each supervisor can add, view and activate/deactivate only the employees that belong to them.
 
