@@ -183,7 +183,7 @@ router.get('/departments/salary/download', isAuthenticated, isOperator, async (r
                GROUP BY user_id
         ) ds ON ds.user_id = u.id
         LEFT JOIN departments d ON ds.department_id = d.id
-       WHERE es.month = ? AND e.is_active = 0
+       WHERE es.month = ? AND e.is_active = 0 AND e.salary_type = 'monthly'
        ORDER BY u.name, e.name
     `, [month]);
 
@@ -267,6 +267,83 @@ router.get('/departments/salary/download', isAuthenticated, isOperator, async (r
   } catch (err) {
     console.error('Error downloading salary:', err);
     req.flash('error', 'Could not download salary');
+    res.redirect('/operator/departments');
+  }
+});
+
+// GET dihadi salary download
+router.get('/departments/dihadi/download', isAuthenticated, isOperator, async (req, res) => {
+  const month = req.query.month || moment().format('YYYY-MM');
+  const half = parseInt(req.query.half, 10) === 2 ? 2 : 1;
+  let start = moment(month + '-01');
+  let end = half === 1 ? moment(month + '-15') : moment(month + '-01').endOf('month');
+  if (half === 2) start = moment(month + '-16');
+  try {
+    const [employees] = await pool.query(`
+      SELECT e.id, e.punching_id, e.name, e.salary, e.allotted_hours,
+             u.name AS supervisor_name, d.name AS department_name
+        FROM employees e
+        JOIN users u ON e.supervisor_id = u.id
+        LEFT JOIN (
+              SELECT user_id, MIN(department_id) AS department_id
+                FROM department_supervisors
+               GROUP BY user_id
+        ) ds ON ds.user_id = u.id
+        LEFT JOIN departments d ON ds.department_id = d.id
+       WHERE e.salary_type = 'dihadi' AND e.is_active = 0
+       ORDER BY u.name, e.name`);
+    const rows = [];
+    for (const emp of employees) {
+      const [att] = await pool.query(
+        'SELECT punch_in, punch_out FROM employee_attendance WHERE employee_id = ? AND date BETWEEN ? AND ?',
+        [emp.id, start.format('YYYY-MM-DD'), end.format('YYYY-MM-DD')]
+      );
+      let totalHours = 0;
+      for (const a of att) {
+        if (!a.punch_in || !a.punch_out) continue;
+        const st = moment(a.punch_in, 'HH:mm:ss');
+        const et = moment(a.punch_out, 'HH:mm:ss');
+        let hrs = et.diff(st, 'minutes') / 60;
+        const mins = hrs * 60;
+        if (mins >= 11 * 60 + 50) {
+          hrs -= 50 / 60;
+        } else if (mins > 5 * 60 + 10) {
+          hrs -= 0.5;
+        }
+        if (hrs < 0) hrs = 0;
+        totalHours += hrs;
+      }
+      const rate = emp.allotted_hours ? parseFloat(emp.salary) / parseFloat(emp.allotted_hours) : 0;
+      const amount = parseFloat((totalHours * rate).toFixed(2));
+      rows.push({
+        supervisor: emp.supervisor_name,
+        department: emp.department_name || '',
+        punching_id: emp.punching_id,
+        employee: emp.name,
+        period: half === 1 ? '1-15' : '16-end',
+        hours: totalHours.toFixed(2),
+        amount
+      });
+    }
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Dihadi');
+    sheet.columns = [
+      { header: 'Supervisor', key: 'supervisor', width: 20 },
+      { header: 'Department', key: 'department', width: 15 },
+      { header: 'Punching ID', key: 'punching_id', width: 15 },
+      { header: 'Employee', key: 'employee', width: 20 },
+      { header: 'Period', key: 'period', width: 12 },
+      { header: 'Hours', key: 'hours', width: 10 },
+      { header: 'Amount', key: 'amount', width: 10 }
+    ];
+    rows.forEach(r => sheet.addRow(r));
+    res.setHeader('Content-Disposition', 'attachment; filename="DihadiSalary.xlsx"');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error('Error downloading dihadi salary:', err);
+    req.flash('error', 'Could not download dihadi salary');
     res.redirect('/operator/departments');
   }
 });

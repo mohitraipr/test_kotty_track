@@ -1,8 +1,15 @@
 const moment = require('moment');
 
 async function calculateSalaryForMonth(conn, employeeId, month) {
-  const [[emp]] = await conn.query('SELECT salary, salary_type, paid_sunday_allowance FROM employees WHERE id = ?', [employeeId]);
+  const [[emp]] = await conn.query(
+    'SELECT salary, salary_type, paid_sunday_allowance, allotted_hours FROM employees WHERE id = ?',
+    [employeeId]
+  );
   if (!emp) return;
+  if (emp.salary_type === 'dihadi') {
+    await calculateDihadiMonthly(conn, employeeId, month, emp);
+    return;
+  }
   const [attendance] = await conn.query(
     'SELECT date, status FROM employee_attendance WHERE employee_id = ? AND DATE_FORMAT(date, "%Y-%m") = ?',
     [employeeId, month]
@@ -79,6 +86,34 @@ async function calculateSalaryForMonth(conn, employeeId, month) {
      VALUES (?, ?, ?, ?, ?, NOW())
      ON DUPLICATE KEY UPDATE gross=VALUES(gross), deduction=VALUES(deduction), net=VALUES(net)`,
     [employeeId, month, gross, deduction, net]
+  );
+}
+
+async function calculateDihadiMonthly(conn, employeeId, month, emp) {
+  const [attendance] = await conn.query(
+    "SELECT date, punch_in, punch_out FROM employee_attendance WHERE employee_id = ? AND DATE_FORMAT(date, '%Y-%m') = ?",
+    [employeeId, month]
+  );
+  const hourlyRate = emp.allotted_hours ? parseFloat(emp.salary) / parseFloat(emp.allotted_hours) : 0;
+  let totalHours = 0;
+  for (const a of attendance) {
+    if (!a.punch_in || !a.punch_out) continue;
+    const start = moment(a.punch_in, 'HH:mm:ss');
+    const end = moment(a.punch_out, 'HH:mm:ss');
+    let hours = end.diff(start, 'minutes') / 60;
+    const mins = hours * 60;
+    if (mins >= 11 * 60 + 50) {
+      hours -= 50 / 60;
+    } else if (mins > 5 * 60 + 10) {
+      hours -= 0.5;
+    }
+    if (hours < 0) hours = 0;
+    totalHours += hours;
+  }
+  const gross = parseFloat((totalHours * hourlyRate).toFixed(2));
+  await conn.query(
+    "INSERT INTO employee_salaries (employee_id, month, gross, deduction, net, created_at) VALUES (?, ?, ?, 0, ?, NOW()) ON DUPLICATE KEY UPDATE gross=VALUES(gross), deduction=0, net=VALUES(net)",
+    [employeeId, month, gross, gross]
   );
 }
 
