@@ -40,7 +40,11 @@
         <th>Punch Out</th>
         <th>Hours</th>
         <% if (employee.salary_type === 'dihadi') { %>
+
+          <th>Lunch Deduction (mins)</th>
+
           <th>Lunch Deduction</th>
+
         <% } %>
         <th>Deduction Reason</th>
       </tr>
@@ -62,7 +66,7 @@
     </tbody>
   </table>
   <% if (employee.salary_type === 'dihadi') { %>
-    <h6>Total Hours: <%= totalHours %> | Hourly Pay: <%= hourlyRate.toFixed(2) %></h6>
+    <h6>Total Hours: <%= totalHours || '0.00' %> | Hourly Pay: <%= hourlyRate.toFixed(2) %></h6>
   <% } %>
   <% if (salary) { %>
     <h6>Gross: <%= salary.gross %> | Deduction: <%= salary.deduction %> | Net: <%= salary.net %></h6>
