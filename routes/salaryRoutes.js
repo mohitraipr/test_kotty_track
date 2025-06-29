@@ -13,6 +13,7 @@ function formatHours(h) {
   if (mins === 60) { hours += 1; mins = 0; }
   return `${hours}.${String(mins).padStart(2, '0')}`;
 }
+
 const { validateAttendanceFilename } = require('../helpers/attendanceFilenameValidator');
 const XLSX = require('xlsx');
 const ExcelJS = require('exceljs');
@@ -235,11 +236,21 @@ router.get('/employees/:id/salary', isAuthenticated, isSupervisor, async (req, r
         const ldMin = lunchDeduction(a.punch_in, a.punch_out);
         a.hours = formatHours(hrsDec);
         a.lunch_deduction = ldMin;
+
+        const hrs = parseFloat(effectiveHours(a.punch_in, a.punch_out).toFixed(2));
+        const ld = parseFloat(lunchDeduction(a.punch_in, a.punch_out).toFixed(2));
+        a.hours = hrs;
+        a.lunch_deduction = ld;
+
         if (emp.salary_type === 'dihadi') {
           totalHours += hrsDec;
         }
       } else {
+
         a.hours = '0.00';
+
+        a.hours = 0;
+
         a.lunch_deduction = 0;
       }
       const isSun = moment(a.date).day() === 0;

@@ -21,6 +21,19 @@ function effectiveHours(punchIn, punchOut) {
 }
 exports.effectiveHours = effectiveHours;
 
+
+function lunchDeduction(punchIn, punchOut) {
+  const start = moment(punchIn, 'HH:mm:ss');
+  const end = moment(punchOut, 'HH:mm:ss');
+  const mins = end.diff(start, 'minutes');
+  if (mins >= 11 * 60 + 50) return 50 / 60;
+  if (mins > 5 * 60 + 10) return 0.5;
+  return 0;
+}
+exports.lunchDeduction = lunchDeduction;
+
+
+
 async function calculateSalaryForMonth(conn, employeeId, month) {
   const [[emp]] = await conn.query(
     'SELECT salary, salary_type, paid_sunday_allowance, allotted_hours FROM employees WHERE id = ?',
