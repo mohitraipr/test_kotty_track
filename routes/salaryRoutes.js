@@ -224,11 +224,13 @@ router.get('/employees/:id/salary', isAuthenticated, isSupervisor, async (req, r
     let paidUsed = 0;
     attendance.forEach(a => {
       if (a.punch_in && a.punch_out) {
+
         const hrs = parseFloat(effectiveHours(a.punch_in, a.punch_out).toFixed(2));
         a.hours = hrs;
         if (emp.salary_type === 'dihadi') {
           totalHours += hrs;
         }
+        a.hours = parseFloat(effectiveHours(a.punch_in, a.punch_out).toFixed(2));
       } else {
         a.hours = 0;
       }
