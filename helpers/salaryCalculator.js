@@ -1,18 +1,25 @@
 const moment = require('moment');
 
+function lunchDeduction(punchIn, punchOut) {
+  const start = moment(punchIn, 'HH:mm:ss');
+  const end = moment(punchOut, 'HH:mm:ss');
+  const mins = end.diff(start, 'minutes');
+  if (mins <= 5 * 60) return 0;
+  if (mins <= 9 * 60 + 30) return 30;
+  return 60;
+}
+exports.lunchDeduction = lunchDeduction;
+
 function effectiveHours(punchIn, punchOut) {
   const start = moment(punchIn, 'HH:mm:ss');
   const end = moment(punchOut, 'HH:mm:ss');
-  let hours = end.diff(start, 'minutes') / 60;
-  const mins = hours * 60;
-  if (mins >= 11 * 60 + 50) {
-    hours -= 50 / 60;
-  } else if (mins > 5 * 60 + 10) {
-    hours -= 0.5;
-  }
-  if (hours < 0) hours = 0;
-  return hours;
+  let mins = end.diff(start, 'minutes');
+  mins -= lunchDeduction(punchIn, punchOut);
+  if (mins > 11 * 60) mins = 11 * 60;
+  if (mins < 0) mins = 0;
+  return mins / 60;
 }
+exports.effectiveHours = effectiveHours;
 
 async function calculateSalaryForMonth(conn, employeeId, month) {
   const [[emp]] = await conn.query(
@@ -123,4 +130,4 @@ async function calculateDihadiMonthly(conn, employeeId, month, emp) {
   );
 }
 
-module.exports = { calculateSalaryForMonth, effectiveHours };
+exports.calculateSalaryForMonth = calculateSalaryForMonth;

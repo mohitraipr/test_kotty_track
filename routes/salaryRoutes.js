@@ -5,7 +5,14 @@ const path = require('path');
 const moment = require('moment');
 const { pool } = require('../config/db');
 const { isAuthenticated, isOperator, isSupervisor } = require('../middlewares/auth');
-const { calculateSalaryForMonth, effectiveHours } = require('../helpers/salaryCalculator');
+const { calculateSalaryForMonth, effectiveHours, lunchDeduction } = require('../helpers/salaryCalculator');
+
+function formatHours(h) {
+  let hours = Math.floor(h);
+  let mins = Math.round((h - hours) * 60);
+  if (mins === 60) { hours += 1; mins = 0; }
+  return `${hours}.${String(mins).padStart(2, '0')}`;
+}
 const { validateAttendanceFilename } = require('../helpers/attendanceFilenameValidator');
 const XLSX = require('xlsx');
 const ExcelJS = require('exceljs');
@@ -224,15 +231,16 @@ router.get('/employees/:id/salary', isAuthenticated, isSupervisor, async (req, r
     let paidUsed = 0;
     attendance.forEach(a => {
       if (a.punch_in && a.punch_out) {
-
-        const hrs = parseFloat(effectiveHours(a.punch_in, a.punch_out).toFixed(2));
-        a.hours = hrs;
+        const hrsDec = effectiveHours(a.punch_in, a.punch_out);
+        const ldMin = lunchDeduction(a.punch_in, a.punch_out);
+        a.hours = formatHours(hrsDec);
+        a.lunch_deduction = ldMin;
         if (emp.salary_type === 'dihadi') {
-          totalHours += hrs;
+          totalHours += hrsDec;
         }
-        a.hours = parseFloat(effectiveHours(a.punch_in, a.punch_out).toFixed(2));
       } else {
-        a.hours = 0;
+        a.hours = '0.00';
+        a.lunch_deduction = 0;
       }
       const isSun = moment(a.date).day() === 0;
       if (isSun) {
@@ -258,11 +266,12 @@ router.get('/employees/:id/salary', isAuthenticated, isSupervisor, async (req, r
         }
       }
     });
+    let totalHoursFormatted = null;
     if (emp.salary_type === 'dihadi') {
-      totalHours = parseFloat(totalHours.toFixed(2));
+      totalHoursFormatted = formatHours(totalHours);
     }
     const [[salary]] = await pool.query('SELECT * FROM employee_salaries WHERE employee_id = ? AND month = ? LIMIT 1', [empId, month]);
-    res.render('employeeSalary', { user: req.session.user, employee: emp, attendance, salary, month, dailyRate, totalHours, hourlyRate });
+    res.render('employeeSalary', { user: req.session.user, employee: emp, attendance, salary, month, dailyRate, totalHours: totalHoursFormatted, hourlyRate });
   } catch (err) {
     console.error('Error loading salary view:', err);
     req.flash('error', 'Failed to load salary');
