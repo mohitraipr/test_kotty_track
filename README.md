@@ -238,6 +238,7 @@ leave days. These credited days are automatically stored in `employee_leaves` wh
 
 
 If an employee is absent on the Saturday before or the Monday after a Sunday, that Sunday is treated as an unpaid absence. When both the Saturday and the following Monday are missed, the weekend becomes a "sandwich" and all three days—Saturday, Sunday and Monday—are deducted from the employee's salary.
+If no attendance record exists for the adjacent day (for example at the start of a month or for a new employee), the Sunday is not automatically marked absent. Only explicit `absent` or `one punch only` entries trigger the deduction.
 
 The salary view lists each day's hours worked along with a note explaining any deductions, so supervisors
 can easily trace why pay was reduced.

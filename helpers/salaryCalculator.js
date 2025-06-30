@@ -28,6 +28,7 @@ exports.effectiveHours = effectiveHours;
 async function calculateSalaryForMonth(conn, employeeId, month) {
   const [[emp]] = await conn.query(
     `SELECT e.salary, e.salary_type, e.paid_sunday_allowance, e.allotted_hours,
+            e.date_of_joining,
             d.name AS department
        FROM employees e
        LEFT JOIN (
@@ -75,11 +76,13 @@ async function calculateSalaryForMonth(conn, employeeId, month) {
     const isSandwich = sandwichDates.includes(dateStr);
 
     if (isSun) {
-      const satStatus = attMap[moment(a.date).subtract(1, 'day').format('YYYY-MM-DD')] || 'absent';
-      const monStatus = attMap[moment(a.date).add(1, 'day').format('YYYY-MM-DD')] || 'absent';
+      const satKey = moment(a.date).subtract(1, 'day').format('YYYY-MM-DD');
+      const monKey = moment(a.date).add(1, 'day').format('YYYY-MM-DD');
+      const satStatus = attMap[satKey];
+      const monStatus = attMap[monKey];
       const missedSat = satStatus === 'absent' || satStatus === 'one punch only';
       const missedMon = monStatus === 'absent' || monStatus === 'one punch only';
-      if (missedSat || missedMon) {
+      if ((satStatus && missedSat) || (monStatus && missedMon)) {
         absent++;
         return;
       }
