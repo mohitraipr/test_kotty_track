@@ -1,4 +1,5 @@
 const moment = require('moment');
+const { SPECIAL_DEPARTMENTS } = require('../utils/departments');
 
 function lunchDeduction(punchIn, punchOut, salaryType = 'dihadi') {
   if (salaryType !== 'dihadi') return 0;
@@ -26,10 +27,22 @@ exports.effectiveHours = effectiveHours;
 
 async function calculateSalaryForMonth(conn, employeeId, month) {
   const [[emp]] = await conn.query(
-    'SELECT salary, salary_type, paid_sunday_allowance, allotted_hours FROM employees WHERE id = ?',
+    `SELECT e.salary, e.salary_type, e.paid_sunday_allowance, e.allotted_hours,
+            d.name AS department
+       FROM employees e
+       LEFT JOIN (
+             SELECT user_id, MIN(department_id) AS department_id
+               FROM department_supervisors
+              GROUP BY user_id
+       ) ds ON ds.user_id = e.supervisor_id
+       LEFT JOIN departments d ON ds.department_id = d.id
+      WHERE e.id = ?`,
     [employeeId]
   );
   if (!emp) return;
+  const specialDept = SPECIAL_DEPARTMENTS.includes(
+    (emp.department || '').toLowerCase()
+  );
   if (emp.salary_type === 'dihadi') {
     await calculateDihadiMonthly(conn, employeeId, month, emp);
     return;
@@ -85,7 +98,9 @@ async function calculateSalaryForMonth(conn, employeeId, month) {
 
     if (isSun) {
       if (status === 'present') {
-        if (parseFloat(emp.salary) < 13500) {
+        if (specialDept) {
+          creditLeaves.push(dateStr);
+        } else if (parseFloat(emp.salary) < 13500) {
           extraPay += dailyRate;
         } else if (paidUsed < (emp.paid_sunday_allowance || 0)) {
           extraPay += dailyRate;
