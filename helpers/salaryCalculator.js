@@ -1,6 +1,7 @@
 const moment = require('moment');
 
-function lunchDeduction(punchIn, punchOut) {
+function lunchDeduction(punchIn, punchOut, salaryType = 'dihadi') {
+  if (salaryType !== 'dihadi') return 0;
   const out = moment(punchOut, 'HH:mm:ss');
   const firstCut = moment('13:10:00', 'HH:mm:ss');
   const secondCut = moment('18:10:00', 'HH:mm:ss');
@@ -10,11 +11,11 @@ function lunchDeduction(punchIn, punchOut) {
 }
 exports.lunchDeduction = lunchDeduction;
 
-function effectiveHours(punchIn, punchOut) {
+function effectiveHours(punchIn, punchOut, salaryType = 'dihadi') {
   const start = moment(punchIn, 'HH:mm:ss');
   const end = moment(punchOut, 'HH:mm:ss');
   let mins = end.diff(start, 'minutes');
-  mins -= lunchDeduction(punchIn, punchOut);
+  mins -= lunchDeduction(punchIn, punchOut, salaryType);
   if (mins > 11 * 60) mins = 11 * 60;
   if (mins < 0) mins = 0;
   return mins / 60;
@@ -52,6 +53,7 @@ async function calculateSalaryForMonth(conn, employeeId, month) {
   let absent = 0;
   let extraPay = 0;
   let paidUsed = 0;
+  const creditLeaves = [];
 
   attendance.forEach(a => {
     const dateStr = moment(a.date).format('YYYY-MM-DD');
@@ -88,12 +90,27 @@ async function calculateSalaryForMonth(conn, employeeId, month) {
         } else if (paidUsed < (emp.paid_sunday_allowance || 0)) {
           extraPay += dailyRate;
           paidUsed++;
+        } else {
+          creditLeaves.push(dateStr);
         }
       }
     } else {
       if (status === 'absent' || status === 'one punch only') absent++;
     }
   });
+
+  for (const d of creditLeaves) {
+    const [rows] = await conn.query(
+      'SELECT id FROM employee_leaves WHERE employee_id = ? AND leave_date = ?',
+      [employeeId, d]
+    );
+    if (!rows.length) {
+      await conn.query(
+        'INSERT INTO employee_leaves (employee_id, leave_date, days, remark) VALUES (?, ?, 1, ?)',
+        [employeeId, d, 'Sunday Credit']
+      );
+    }
+  }
 
   const [nightRows] = await conn.query(
     'SELECT COALESCE(SUM(nights),0) AS total_nights FROM employee_nights WHERE employee_id = ? AND month = ?',

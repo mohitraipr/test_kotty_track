@@ -198,6 +198,8 @@ Update the `employees` table to store each worker's allotted hours per day:
 ALTER TABLE employees ADD COLUMN allotted_hours DECIMAL(4,2) NOT NULL DEFAULT 0;
 ```
 
+Lunch breaks are deducted from the recorded hours only for workers paid on a `dihadi` (daily wage) basis. Monthly salary employees keep their full punch duration.
+
 Add a `designation` field for each employee:
 
 ```sql
@@ -225,7 +227,7 @@ Employees whose monthly salary is below 13,500 receive an extra day's pay for ev
 For employees earning 13,500 or more, working on a Sunday does not increase pay but instead grants a leave day.
 Supervisors may override this by assigning a `paid_sunday_allowance` value for a worker.  The allowance
 specifies how many Sundays in a month are paid regardless of salary; additional worked Sundays become
-leave days.
+leave days. These credited days are automatically stored in `employee_leaves` whenever salaries are recalculated.
 
 If an employee is absent on the Saturday before or the Monday after a Sunday, that Sunday is treated as an unpaid absence.
 
