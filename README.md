@@ -223,9 +223,11 @@ monthly salary.
 
 ### Sunday Attendance Rules
 
-Employees whose monthly salary is below 13,500 receive an extra day's pay for every Sunday they work.
-For employees earning 13,500 or more, working on a Sunday does not increase pay but instead grants a leave day.
-Supervisors may override this by assigning a `paid_sunday_allowance` value for a worker.  The allowance
+Employees whose monthly salary is below 13,500 receive an extra day's pay for every Sunday they work,
+unless their department is `catalog`, `account` or `merchant`. Workers from those departments always
+receive Sunday pay **and** still have the day credited to their leave balance whenever they are present.
+For employees earning 13,500 or more, working on a Sunday does not increase pay but instead grants a
+leave day. Supervisors may override this by assigning a `paid_sunday_allowance` value for a worker.  The allowance
 specifies how many Sundays in a month are paid regardless of salary; additional worked Sundays become
 leave days. These credited days are automatically stored in `employee_leaves` whenever salaries are recalculated.
 
