@@ -237,7 +237,7 @@ specifies how many Sundays in a month are paid regardless of salary; additional 
 leave days. These credited days are automatically stored in `employee_leaves` whenever salaries are recalculated.
 
 
-If an employee is absent on the Saturday before or the Monday after a Sunday, that Sunday is treated as an unpaid absence.
+If an employee is absent on the Saturday before or the Monday after a Sunday, that Sunday is treated as an unpaid absence. When both the Saturday and the following Monday are missed, the weekend becomes a "sandwich" and all three days—Saturday, Sunday and Monday—are deducted from the employee's salary.
 
 The salary view lists each day's hours worked along with a note explaining any deductions, so supervisors
 can easily trace why pay was reduced.

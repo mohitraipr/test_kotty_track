@@ -75,11 +75,11 @@ async function calculateSalaryForMonth(conn, employeeId, month) {
     const isSandwich = sandwichDates.includes(dateStr);
 
     if (isSun) {
-      const satStatus = attMap[moment(a.date).subtract(1, 'day').format('YYYY-MM-DD')];
-      const monStatus = attMap[moment(a.date).add(1, 'day').format('YYYY-MM-DD')];
-      const adjAbsent = (satStatus === 'absent' || satStatus === 'one punch only') ||
-                        (monStatus === 'absent' || monStatus === 'one punch only');
-      if (adjAbsent) {
+      const satStatus = attMap[moment(a.date).subtract(1, 'day').format('YYYY-MM-DD')] || 'absent';
+      const monStatus = attMap[moment(a.date).add(1, 'day').format('YYYY-MM-DD')] || 'absent';
+      const missedSat = satStatus === 'absent' || satStatus === 'one punch only';
+      const missedMon = monStatus === 'absent' || monStatus === 'one punch only';
+      if (missedSat || missedMon) {
         absent++;
         return;
       }
