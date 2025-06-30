@@ -235,7 +235,12 @@ router.get('/employees/:id/salary', isAuthenticated, isSupervisor, async (req, r
       return res.redirect('/supervisor/employees');
     }
     const startDate = moment(month + '-01').format('YYYY-MM-DD');
-    const endDate = moment(month + '-15').format('YYYY-MM-DD');
+    let endDate;
+    if (emp.salary_type === 'dihadi') {
+      endDate = moment(month + '-15').format('YYYY-MM-DD');
+    } else {
+      endDate = moment(month + '-01').endOf('month').format('YYYY-MM-DD');
+    }
     const [attendance] = await pool.query('SELECT * FROM employee_attendance WHERE employee_id = ? AND date BETWEEN ? AND ? ORDER BY date', [empId, startDate, endDate]);
     const daysInMonth = moment(month + '-01').daysInMonth();
     const dailyRate = parseFloat(emp.salary) / daysInMonth;
