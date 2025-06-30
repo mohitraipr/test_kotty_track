@@ -254,9 +254,9 @@ router.get('/employees/:id/salary', isAuthenticated, isSupervisor, async (req, r
     let paidUsed = 0;
     attendance.forEach(a => {
       if (a.punch_in && a.punch_out) {
-        const hrsDec = effectiveHours(a.punch_in, a.punch_out);
+        const hrsDec = effectiveHours(a.punch_in, a.punch_out, emp.salary_type);
         a.hours = formatHours(hrsDec);
-        a.lunch_deduction = lunchDeduction(a.punch_in, a.punch_out);
+        a.lunch_deduction = lunchDeduction(a.punch_in, a.punch_out, emp.salary_type);
         if (emp.salary_type === 'dihadi') {
           totalHours += hrsDec;
         }
