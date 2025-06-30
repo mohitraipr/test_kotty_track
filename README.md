@@ -230,6 +230,13 @@ monthly salary.
 
 These credited days are automatically inserted into `employee_leaves` during salary calculations. For example, a worker earning 14,000 with no allowance who attends two Sundays will see two "Sunday Credit" entries. If the supervisor sets an allowance of two paid Sundays, those days are paid and no credits are added.
 
+Employees whose monthly salary is below 13,500 receive an extra day's pay for every Sunday they work.
+For employees earning 13,500 or more, working on a Sunday does not increase pay but instead grants a leave day.
+Supervisors may override this by assigning a `paid_sunday_allowance` value for a worker.  The allowance
+specifies how many Sundays in a month are paid regardless of salary; additional worked Sundays become
+leave days. These credited days are automatically stored in `employee_leaves` whenever salaries are recalculated.
+
+
 If an employee is absent on the Saturday before or the Monday after a Sunday, that Sunday is treated as an unpaid absence.
 
 The salary view lists each day's hours worked along with a note explaining any deductions, so supervisors
