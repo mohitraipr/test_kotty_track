@@ -198,6 +198,8 @@ Update the `employees` table to store each worker's allotted hours per day:
 ALTER TABLE employees ADD COLUMN allotted_hours DECIMAL(4,2) NOT NULL DEFAULT 0;
 ```
 
+Lunch breaks are deducted from the recorded hours only for workers paid on a `dihadi` (daily wage) basis. Monthly salary employees keep their full punch duration.
+
 Add a `designation` field for each employee:
 
 ```sql
@@ -221,11 +223,12 @@ monthly salary.
 
 ### Sunday Attendance Rules
 
-Employees whose monthly salary is below 13,500 receive an extra day's pay for every Sunday they work.
-For employees earning 13,500 or more, working on a Sunday does not increase pay but instead grants a leave day.
-Supervisors may override this by assigning a `paid_sunday_allowance` value for a worker.  The allowance
-specifies how many Sundays in a month are paid regardless of salary; additional worked Sundays become
-leave days.
+- **Salary below 13,500** – each Sunday worked grants an extra day's pay. If the employee is from a special department, the day is credited instead of paid.
+- **Special departments (`catalog`, `account`, `merchant`)** – Sundays do not grant extra pay. A worked Sunday is credited to the employee's leave balance.
+- **Salary 13,500 or more** – a worked Sunday becomes a leave credit instead of extra pay. Supervisors may override this using the employee's `paid_sunday_allowance`.
+- **Paid Sunday allowance** – specifies how many Sundays in a month are paid regardless of salary. Additional Sundays after the allowance become leave credits.
+
+These credited days are automatically inserted into `employee_leaves` during salary calculations. For example, a worker earning 14,000 with no allowance who attends two Sundays will see two "Sunday Credit" entries. If the supervisor sets an allowance of two paid Sundays, those days are paid and no credits are added.
 
 If an employee is absent on the Saturday before or the Monday after a Sunday, that Sunday is treated as an unpaid absence.
 
