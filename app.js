@@ -81,6 +81,7 @@ const departmentMgmtRoutes = require('./routes/departmentMgmtRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
 const salaryRoutes = require('./routes/salaryRoutes');
 const operatorEmployeeRoutes = require('./routes/operatorEmployeeRoutes');
+const flipkartReturnRoutes = require('./routes/flipkartReturnRoutes');
 
 // Use Routes
 app.use('/', authRoutes);
@@ -106,6 +107,7 @@ app.use('/inventory', inventoryRoutes);
 app.use('/store-admin', storeAdminRoutes);
 app.use('/supervisor', employeeRoutes);
 app.use('/', salaryRoutes);
+app.use('/flipkart', flipkartReturnRoutes);
 
 app.use('/', hrRoutes);
 // Home Route

@@ -305,3 +305,13 @@ A sandwich day is normally a paid leave. However if an employee is absent either
 
 Salaries are released 15 days after the end of the month so that any deductions for damage or misconduct can be applied before payout.
 
+## Environment Setup
+
+Some routes rely on credentials that should not be hard coded. Create an `.env` file in the project root and define the following variable:
+
+```
+FLIPKART_API_TOKEN=your_flipkart_api_token_here
+```
+
+When running the app, this token will be loaded and used to authenticate requests to Flipkart.
+
